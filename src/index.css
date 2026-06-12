@@ -285,6 +285,8 @@ body {
   display: flex;
   flex-direction: column;
   transition: margin-left var(--transition-slow);
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .app-topbar {
@@ -1564,7 +1566,7 @@ body {
 /* Grid layouts */
 .grid-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 1rem;
 }
 
@@ -1612,4 +1614,15 @@ body {
   width: 32px;
   height: 32px;
   border-width: 3px;
+}
+
+/* Mobile menu toggle button in Topbar (hidden on desktop) */
+.mobile-menu-toggle {
+  display: inline-flex;
+}
+
+@media (min-width: 1024px) {
+  .mobile-menu-toggle {
+    display: none !important;
+  }
 }

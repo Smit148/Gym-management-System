@@ -13,6 +13,7 @@ import { CheckInModal } from '@/features/attendance/components/CheckInModal'
 import { DataTable } from '@/organisms/DataTable/DataTable'
 import type { ColumnDef } from '@/organisms/DataTable/types'
 import type { Attendance } from '@/types'
+import { exportAttendancePDF } from '@/lib/exports/attendance-pdf'
 
 export function AttendancePage() {
   const { data: logs = [], isLoading } = useAttendanceLogs()
@@ -164,6 +165,10 @@ export function AttendancePage() {
     document.body.removeChild(link)
   }
 
+  const handleExportPDF = () => {
+    exportAttendancePDF(logs, stats.totalPresentToday, stats.activeSessions)
+  }
+
   return (
     <div className="page-enter">
       {/* Page Header */}
@@ -172,10 +177,14 @@ export function AttendancePage() {
           <h1 className="page-title">Daily Attendance Desk</h1>
           <p className="page-subtitle">Track today's footfalls, manage checked-in sessions, and audit entries</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className="btn btn-secondary" onClick={handleExportCSV}>
             <Download size={16} />
             Export CSV
+          </button>
+          <button className="btn btn-secondary" onClick={handleExportPDF}>
+            <Download size={16} />
+            Export PDF
           </button>
           <button className="btn btn-primary" onClick={() => setShowCheckInModal(true)} style={{ background: 'var(--success-600)', borderColor: 'var(--success-600)' }}>
             <Plus size={16} />
@@ -185,7 +194,7 @@ export function AttendancePage() {
       </div>
 
       {/* KPI statistics cards */}
-      <div className="grid-stats" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="grid-stats" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
         {/* Total Footfall */}
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: 'var(--primary-50)', color: 'var(--primary-600)' }}>
@@ -219,7 +228,7 @@ export function AttendancePage() {
 
       {/* Filter Tabs & DataTable */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem' }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '0.5rem' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '0.5rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {[
             { value: 'today', label: "Today's Logs" },
             { value: 'active', label: 'Currently Inside' },
@@ -238,6 +247,7 @@ export function AttendancePage() {
                 borderBottom: activeTab === tab.value ? '2px solid var(--primary-600)' : '2px solid transparent',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-sans)',
+                flexShrink: 0,
               }}
             >
               {tab.label}

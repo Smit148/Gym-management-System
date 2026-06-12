@@ -27,7 +27,7 @@ export function Topbar() {
     <header className="app-topbar">
       {/* Mobile menu toggle */}
       <button
-        className="btn btn-ghost btn-icon"
+        className="btn btn-ghost btn-icon mobile-menu-toggle"
         onClick={toggleSidebar}
         aria-label="Toggle sidebar"
         style={{ marginRight: '0.75rem' }}

@@ -187,7 +187,7 @@ export function DashboardPage() {
       </div>
 
       {/* Bottom Section: 7-Day Trend + Referral Leaderboard + Activity Feed */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '1.5rem', alignItems: 'start' }}>
         
         {/* Widget 1: 7-Day Attendance Trend */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

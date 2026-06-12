@@ -16,6 +16,7 @@ import { useExpenses } from '@/features/expenses/hooks/useExpenses'
 import { useLeads } from '@/features/leads/hooks/useLeads'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import type { ExpenseCategory } from '@/types'
+import { exportReportsPDF } from '@/lib/exports/reports-pdf'
 
 type DateRangeType = 'last_30_days' | 'this_month' | 'last_3_months' | 'this_year' | 'custom'
 
@@ -277,7 +278,7 @@ export function ReportsPage() {
     ]
   }, [leads])
 
-  // CSV Exporter Action
+  // Export Report to CSV
   const handleExportCSV = () => {
     let csvContent = 'data:text/csv;charset=utf-8,'
     csvContent += 'Report Period: ' + dateRangeLabel + '\n\n'
@@ -312,6 +313,17 @@ export function ReportsPage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleExportPDF = () => {
+    exportReportsPDF(
+      calculatedMetrics,
+      monthlyFinanceData,
+      expenseCategoriesBreakdown,
+      memberGrowthData,
+      dateRangeLabel,
+      dateRange
+    )
   }
 
   // Finance chart geometry configurations
@@ -379,10 +391,16 @@ export function ReportsPage() {
           <h1 className="page-title">Reports & Business Insights</h1>
           <p className="page-subtitle">Track revenue, expenses, net profits, and member growth logs</p>
         </div>
-        <button className="btn btn-primary" onClick={handleExportCSV}>
-          <Download size={16} />
-          Export CSV Report
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button className="btn btn-secondary" onClick={handleExportCSV}>
+            <Download size={16} />
+            Export CSV Report
+          </button>
+          <button className="btn btn-primary" onClick={handleExportPDF}>
+            <Download size={16} />
+            Export PDF Report
+          </button>
+        </div>
       </div>
 
       {/* Date Filter Bar */}
@@ -475,7 +493,7 @@ export function ReportsPage() {
       </div>
 
       {/* Charts Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
         
         {/* CHART 1: Dynamic SVG Cash Flow Line Chart */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -624,7 +642,7 @@ export function ReportsPage() {
       </div>
 
       {/* Grid: Member Growth and Lead Funnel */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
         
         {/* CHART 3: Member Growth Bar Graph */}
         <div className="card">

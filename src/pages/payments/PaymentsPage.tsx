@@ -15,6 +15,7 @@ import { PaymentDetailDrawer } from '@/features/payments/components/PaymentDetai
 import { DataTable } from '@/organisms/DataTable/DataTable'
 import type { ColumnDef } from '@/organisms/DataTable/types'
 import type { Payment } from '@/types'
+import { exportPaymentsPDF } from '@/lib/exports/payments-pdf'
 
 export function PaymentsPage() {
   const { data: payments = [], isLoading } = usePayments()
@@ -119,10 +120,10 @@ export function PaymentsPage() {
   // Export payments list to CSV
   const handleExportCSV = () => {
     let csvContent = 'data:text/csv;charset=utf-8,'
-    csvContent += 'Receipt No,Member Name,Member ID,Amount,Payment Method,Date,Description\n'
+    csvContent += 'Receipt No,Member Name,Member ID,Amount,Method,Date,Description\n'
     
     payments.forEach((p) => {
-      csvContent += `"${p.receipt_number || ''}","${p.member_name || ''}","${p.member_id}",${p.amount},"${p.payment_method}","${formatDate(p.paid_at)}","${p.description || ''}"\n`
+      csvContent += `"${p.receipt_number || 'Draft'}","${p.member_name || 'Member'}","${p.member_id}",${p.amount},"${p.payment_method.toUpperCase()}","${formatDate(p.paid_at)}","${p.description || '—'}"\n`
     })
 
     const encodedUri = encodeURI(csvContent)
@@ -134,6 +135,10 @@ export function PaymentsPage() {
     document.body.removeChild(link)
   }
 
+  const handleExportPDF = () => {
+    exportPaymentsPDF(payments, stats.totalCollected)
+  }
+
   return (
     <div className="page-enter">
       {/* Page Header */}
@@ -142,10 +147,14 @@ export function PaymentsPage() {
           <h1 className="page-title">Payments Ledger</h1>
           <p className="page-subtitle">Track collections, view invoices, and record membership payments</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className="btn btn-secondary" onClick={handleExportCSV}>
             <Download size={16} />
             Export CSV
+          </button>
+          <button className="btn btn-secondary" onClick={handleExportPDF}>
+            <Download size={16} />
+            Export PDF
           </button>
           <button className="btn btn-primary" onClick={() => setShowRecordModal(true)}>
             <Plus size={16} />
@@ -155,7 +164,7 @@ export function PaymentsPage() {
       </div>
 
       {/* KPI metrics cards */}
-      <div className="grid-stats" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="grid-stats" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
         {/* Total Revenue */}
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: 'var(--success-50)', color: 'var(--success-600)' }}>
@@ -199,7 +208,7 @@ export function PaymentsPage() {
 
       {/* Filter Tabs & DataTable */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem' }}>
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '0.5rem' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '0.5rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {([
             { value: 'all', label: 'All Transactions' },
             { value: 'upi', label: 'UPI' },
@@ -220,6 +229,7 @@ export function PaymentsPage() {
                 borderBottom: methodFilter === tab.value ? '2px solid var(--primary-600)' : '2px solid transparent',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-sans)',
+                flexShrink: 0,
               }}
             >
               {tab.label}

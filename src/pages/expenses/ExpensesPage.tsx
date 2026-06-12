@@ -14,6 +14,7 @@ import { AddExpenseModal } from '@/features/expenses/components/AddExpenseModal'
 import { DataTable } from '@/organisms/DataTable/DataTable'
 import type { ColumnDef } from '@/organisms/DataTable/types'
 import type { Expense, ExpenseCategory } from '@/types'
+import { exportExpensesPDF } from '@/lib/exports/expenses-pdf'
 
 const categoryLabels: Record<ExpenseCategory, string> = {
   rent: 'Rent & Lease',
@@ -172,6 +173,10 @@ export function ExpensesPage() {
     document.body.removeChild(link)
   }
 
+  const handleExportPDF = () => {
+    exportExpensesPDF(expenses, stats.totalRecorded, stats.totalPlanned)
+  }
+
   return (
     <div className="page-enter">
       {/* Page Header */}
@@ -180,10 +185,14 @@ export function ExpensesPage() {
           <h1 className="page-title">Expenses Ledger</h1>
           <p className="page-subtitle">Track operational cash outflows, scheduled vendor bills, and payroll</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className="btn btn-secondary" onClick={handleExportCSV}>
             <Download size={16} />
             Export CSV
+          </button>
+          <button className="btn btn-secondary" onClick={handleExportPDF}>
+            <Download size={16} />
+            Export PDF
           </button>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ background: 'var(--danger-600)', borderColor: 'var(--danger-600)' }}>
             <Plus size={16} />
@@ -193,7 +202,7 @@ export function ExpensesPage() {
       </div>
 
       {/* KPI statistics cards */}
-      <div className="grid-stats" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <div className="grid-stats" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))' }}>
         {/* Total Expenses */}
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: 'var(--danger-50)', color: 'var(--danger-600)' }}>
