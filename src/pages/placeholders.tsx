@@ -1,4 +1,4 @@
-import { Users, ClipboardCheck, CreditCard, ArrowUpFromLine, Dumbbell, BarChart3 } from 'lucide-react'
+import { Users, ClipboardCheck, CreditCard, ArrowUpFromLine, BarChart3 } from 'lucide-react'
 
 interface PlaceholderProps {
   title: string
@@ -65,10 +65,6 @@ export function PaymentsPage() {
 
 export function ExpensesPage() {
   return <PlaceholderPage title="Expenses" subtitle="Track gym expenses and monitor profit" icon={<ArrowUpFromLine size={28} />} />
-}
-
-export function TrainersPage() {
-  return <PlaceholderPage title="Trainers" subtitle="Manage trainers and member assignments" icon={<Dumbbell size={28} />} />
 }
 
 export function ReportsPage() {

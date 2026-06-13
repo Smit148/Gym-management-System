@@ -10,7 +10,9 @@ import { ExpensesPage } from '@/pages/expenses/ExpensesPage'
 import { AttendancePage } from '@/pages/attendance/AttendancePage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { TasksPage } from '@/pages/tasks/TasksPage'
-import { TrainersPage } from '@/pages/placeholders'
+import { StaffPage } from '@/pages/staff/StaffPage'
+import { SalaryPage } from '@/pages/salary/SalaryPage'
+import { WhatsAppPage } from '@/pages/whatsapp/WhatsAppPage'
 import { useAuthStore } from '@/store/auth.store'
 
 // Auth guard wrapper
@@ -52,7 +54,9 @@ export const routes: RouteObject[] = [
       { path: 'attendance', element: <AttendancePage /> },
       { path: 'payments', element: <PaymentsPage /> },
       { path: 'expenses', element: <ExpensesPage /> },
-      { path: 'trainers', element: <TrainersPage /> },
+      { path: 'staff', element: <StaffPage /> },
+      { path: 'salary', element: <SalaryPage /> },
+      { path: 'whatsapp', element: <WhatsAppPage /> },
       { path: 'tasks', element: <TasksPage /> },
       { path: 'reports', element: <ReportsPage /> },
       { path: 'settings', element: <SettingsPage /> },

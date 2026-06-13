@@ -57,4 +57,23 @@ export const queryKeys = {
   tasks: {
     all: ['tasks'] as const,
   },
+  staff: {
+    all: ['staff'] as const,
+    lists: () => ['staff', 'list'] as const,
+    list: (filters?: Record<string, any>) => ['staff', 'list', filters || {}] as const,
+    detail: (id: string) => ['staff', 'detail', id] as const,
+  },
+  salaryRecords: {
+    all: ['salaryRecords'] as const,
+    lists: () => ['salaryRecords', 'list'] as const,
+    list: (filters?: Record<string, any>) => ['salaryRecords', 'list', filters || {}] as const,
+  },
+  whatsappTemplates: {
+    all: ['whatsappTemplates'] as const,
+  },
+  whatsappReminders: {
+    all: ['whatsappReminders'] as const,
+    lists: () => ['whatsappReminders', 'list'] as const,
+    list: (filters?: Record<string, any>) => ['whatsappReminders', 'list', filters || {}] as const,
+  },
 }

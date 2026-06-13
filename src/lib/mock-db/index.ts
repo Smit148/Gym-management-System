@@ -13,6 +13,10 @@ import type {
   Attendance,
   Task,
   GymSettings,
+  Staff,
+  SalaryRecord,
+  WhatsAppTemplate,
+  WhatsAppReminder,
 } from '@/types'
 import { initialMembers, initialMemberships, initialPlans } from './members.db'
 import { initialLeads, initialFollowups, initialTrialMembers } from './leads.db'
@@ -21,6 +25,9 @@ import { initialExpenses } from './expenses.db'
 import { initialAttendance } from './attendance.db'
 import { initialTasks } from './tasks.db'
 import { initialSettings } from './settings.db'
+import { initialStaff } from './staff.db'
+import { initialSalaryRecords } from './salary.db'
+import { initialWhatsAppTemplates, initialWhatsAppReminders } from './whatsapp.db'
 
 import { MembersRepository } from './repositories/members.repository'
 import { LeadsRepository } from './repositories/leads.repository'
@@ -29,6 +36,9 @@ import { ExpensesRepository } from './repositories/expenses.repository'
 import { AttendanceRepository } from './repositories/attendance.repository'
 import { SettingsRepository } from './repositories/settings.repository'
 import { TasksRepository } from './repositories/tasks.repository'
+import { StaffRepository } from './repositories/staff.repository'
+import { SalaryRepository } from './repositories/salary.repository'
+import { WhatsAppRepository } from './repositories/whatsapp.repository'
 
 interface MockDbState {
   members: Member[]
@@ -44,6 +54,10 @@ interface MockDbState {
   tasks: Task[]
   settings: GymSettings
   receipt_sequence: number
+  staff: Staff[]
+  salaryRecords: SalaryRecord[]
+  whatsappTemplates: WhatsAppTemplate[]
+  whatsappReminders: WhatsAppReminder[]
 
   // Mutations
   addMember: (member: Member, membership: Membership) => void
@@ -62,6 +76,20 @@ interface MockDbState {
   addTask: (task: Task) => void
   updateTask: (task: Task) => void
   addActivityEvent: (event: Omit<ActivityEvent, 'id' | 'timestamp'>) => void
+  // Staff mutations
+  addStaff: (staff: Staff) => void
+  updateStaff: (staff: Staff) => void
+  deleteStaff: (staffId: string) => void
+  // Salary mutations
+  addSalaryRecord: (record: SalaryRecord) => void
+  updateSalaryRecord: (record: SalaryRecord) => void
+  markSalaryAsPaid: (recordId: string, paidAmount: number, paymentMethod: SalaryRecord['payment_method']) => void
+  // WhatsApp mutations
+  addWhatsAppTemplate: (template: WhatsAppTemplate) => void
+  updateWhatsAppTemplate: (template: WhatsAppTemplate) => void
+  addWhatsAppReminder: (reminder: WhatsAppReminder) => void
+  markReminderSent: (reminderId: string) => void
+  cancelReminder: (reminderId: string) => void
   resetDb: () => void
 }
 
@@ -151,6 +179,10 @@ export const useMockDbStore = create<MockDbState>()(
       tasks: initialTasks,
       settings: initialSettings,
       receipt_sequence: initialPayments.length + 1,
+      staff: initialStaff,
+      salaryRecords: initialSalaryRecords,
+      whatsappTemplates: initialWhatsAppTemplates,
+      whatsappReminders: initialWhatsAppReminders,
 
       addMember: (member, membership) =>
         set((state) => MembersRepository.addMember(state, member, membership)),
@@ -209,6 +241,42 @@ export const useMockDbStore = create<MockDbState>()(
           }
         }),
 
+      // Staff mutations
+      addStaff: (staffMember) =>
+        set((state) => StaffRepository.addStaff(state, staffMember)),
+
+      updateStaff: (staffMember) =>
+        set((state) => StaffRepository.updateStaff(state, staffMember)),
+
+      deleteStaff: (staffId) =>
+        set((state) => StaffRepository.deleteStaff(state, staffId)),
+
+      // Salary mutations
+      addSalaryRecord: (record) =>
+        set((state) => SalaryRepository.addSalaryRecord(state, record)),
+
+      updateSalaryRecord: (record) =>
+        set((state) => SalaryRepository.updateSalaryRecord(state, record)),
+
+      markSalaryAsPaid: (recordId, paidAmount, paymentMethod) =>
+        set((state) => SalaryRepository.markAsPaid(state, recordId, paidAmount, paymentMethod)),
+
+      // WhatsApp mutations
+      addWhatsAppTemplate: (template) =>
+        set((state) => WhatsAppRepository.addTemplate(state, template)),
+
+      updateWhatsAppTemplate: (template) =>
+        set((state) => WhatsAppRepository.updateTemplate(state, template)),
+
+      addWhatsAppReminder: (reminder) =>
+        set((state) => WhatsAppRepository.addReminder(state, reminder)),
+
+      markReminderSent: (reminderId) =>
+        set((state) => WhatsAppRepository.markAsSent(state, reminderId)),
+
+      cancelReminder: (reminderId) =>
+        set((state) => WhatsAppRepository.cancelReminder(state, reminderId)),
+
       resetDb: () =>
         set({
           members: initialMembers,
@@ -224,6 +292,10 @@ export const useMockDbStore = create<MockDbState>()(
           tasks: initialTasks,
           settings: initialSettings,
           receipt_sequence: initialPayments.length + 1,
+          staff: initialStaff,
+          salaryRecords: initialSalaryRecords,
+          whatsappTemplates: initialWhatsAppTemplates,
+          whatsappReminders: initialWhatsAppReminders,
         }),
     }),
     {

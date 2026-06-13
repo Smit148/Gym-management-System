@@ -319,3 +319,71 @@ export interface GymSettings {
   currency: string
 }
 
+
+// ---- Staff ----
+
+export type StaffRole = 'trainer' | 'receptionist' | 'cleaning' | 'manager' | 'other'
+
+export type StaffStatus = 'active' | 'on_leave' | 'terminated'
+
+export interface Staff extends BaseEntity {
+  first_name: string
+  last_name: string
+  phone: string
+  email: string | null
+  role: StaffRole
+  status: StaffStatus
+  joined_at: string
+  salary_amount: number
+  salary_frequency: 'monthly'
+  shift: 'morning' | 'evening' | 'full_day' | 'flexible'
+  photo_url: string | null
+  emergency_contact: string | null
+  notes: string | null
+}
+
+
+// ---- Salary ----
+
+export type SalaryStatus = 'paid' | 'pending' | 'overdue' | 'partial'
+
+export interface SalaryRecord extends BaseEntity {
+  staff_id: string
+  staff_name?: string
+  amount: number
+  month: string
+  status: SalaryStatus
+  paid_amount: number
+  paid_at: string | null
+  payment_method: PaymentMethod | null
+  notes: string | null
+}
+
+
+// ---- WhatsApp Reminder ----
+
+export type ReminderType = 'membership_expiry' | 'payment_due' | 'birthday' | 'attendance_nudge' | 'custom'
+
+export type ReminderStatus = 'scheduled' | 'sent' | 'failed' | 'cancelled'
+
+export interface WhatsAppTemplate {
+  id: string
+  name: string
+  type: ReminderType
+  message: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface WhatsAppReminder extends BaseEntity {
+  template_id: string
+  template_name?: string
+  recipient_name: string
+  recipient_phone: string
+  message: string
+  type: ReminderType
+  status: ReminderStatus
+  scheduled_at: string
+  sent_at: string | null
+}
+
