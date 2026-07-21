@@ -12,7 +12,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import { useWhatsAppReminders, useWhatsAppTemplates, useUpdateTemplate } from '@/features/whatsapp/hooks/useWhatsApp'
+import { useWhatsAppReminders, useWhatsAppTemplates, useUpdateTemplate, useRetryReminder } from '@/features/whatsapp/hooks/useWhatsApp'
 import { ComposeReminderModal } from '@/features/whatsapp/components/ComposeReminderModal'
 import { DataTable } from '@/organisms/DataTable/DataTable'
 import type { ColumnDef } from '@/organisms/DataTable/types'
@@ -53,6 +53,7 @@ export function WhatsAppPage() {
   const { data: reminders = [], isLoading: loadingReminders } = useWhatsAppReminders()
   const { data: templates = [], isLoading: loadingTemplates } = useWhatsAppTemplates()
   const updateTemplateMutation = useUpdateTemplate()
+  const retryReminderMutation = useRetryReminder()
 
   const [activeTab, setActiveTab] = useState<'log' | 'templates'>('log')
   const [showComposeModal, setShowComposeModal] = useState(false)
@@ -250,6 +251,23 @@ export function WhatsAppPage() {
               title: 'No reminders sent yet',
               message: 'Compose your first WhatsApp reminder to get started.',
             }}
+            rowActions={[
+              {
+                label: 'Retry Message',
+                icon: <Send size={14} />,
+                action: (r) => {
+                  retryReminderMutation.mutate(r.id, {
+                    onSuccess: () => {
+                      const phoneDigits = r.recipient_phone.replace(/\D/g, '')
+                      const phoneWithCountry = phoneDigits.startsWith('91') && phoneDigits.length > 10 ? phoneDigits : `91${phoneDigits.slice(-10)}`
+                      const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(r.message)}`
+                      window.open(url, '_blank')
+                    }
+                  })
+                },
+                visible: (r) => r.status === 'failed',
+              }
+            ]}
           />
         )}
 

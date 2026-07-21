@@ -59,6 +59,10 @@ interface MockDbState {
   whatsappTemplates: WhatsAppTemplate[]
   whatsappReminders: WhatsAppReminder[]
 
+  // Plan mutations
+  addPlan: (plan: MembershipPlan) => void
+  updatePlan: (plan: MembershipPlan) => void
+
   // Mutations
   addMember: (member: Member, membership: Membership) => void
   updateMember: (member: Member) => void
@@ -183,6 +187,14 @@ export const useMockDbStore = create<MockDbState>()(
       salaryRecords: initialSalaryRecords,
       whatsappTemplates: initialWhatsAppTemplates,
       whatsappReminders: initialWhatsAppReminders,
+
+      addPlan: (plan) =>
+        set((state) => ({ plans: [...state.plans, plan] })),
+
+      updatePlan: (plan) =>
+        set((state) => ({
+          plans: state.plans.map((p) => (p.id === plan.id ? plan : p)),
+        })),
 
       addMember: (member, membership) =>
         set((state) => MembersRepository.addMember(state, member, membership)),

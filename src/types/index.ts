@@ -336,7 +336,7 @@ export interface Staff extends BaseEntity {
   joined_at: string
   salary_amount: number
   salary_frequency: 'monthly'
-  shift: 'morning' | 'evening' | 'full_day' | 'flexible'
+  shift: 'morning' | 'evening' | 'full_day' | 'flexible' | 'custom'
   photo_url: string | null
   emergency_contact: string | null
   notes: string | null

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
+import { toast } from '@/components/Toast'
+import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { useCreateStaff, useUpdateStaff } from '../hooks/useStaff'
 import type { Staff, StaffRole } from '@/types'
 
@@ -21,6 +23,7 @@ const shiftOptions = [
   { value: 'evening', label: 'Evening (2PM–10PM)' },
   { value: 'full_day', label: 'Full Day (9AM–6PM)' },
   { value: 'flexible', label: 'Flexible' },
+  { value: 'custom', label: 'Custom Time Range' },
 ] as const
 
 export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
@@ -35,6 +38,8 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
     email: editStaff?.email || '',
     role: editStaff?.role || 'trainer' as StaffRole,
     shift: editStaff?.shift || 'morning' as Staff['shift'],
+    shift_start: (editStaff as any)?.shift_start || '13:00',
+    shift_end: (editStaff as any)?.shift_end || '17:00',
     salary_amount: editStaff?.salary_amount || 15000,
     emergency_contact: editStaff?.emergency_contact || '',
     notes: editStaff?.notes || '',
@@ -47,7 +52,15 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
     if (!formData.first_name.trim()) errs.first_name = 'First name is required'
     if (!formData.last_name.trim()) errs.last_name = 'Last name is required'
     if (!formData.phone.trim()) errs.phone = 'Phone number is required'
+    else if (formData.phone.replace(/\D/g, '').length < 10) errs.phone = 'Phone must be at least 10 digits'
     if (formData.salary_amount <= 0) errs.salary_amount = 'Salary must be greater than 0'
+    if (formData.shift === 'custom') {
+      if (!formData.shift_start) errs.shift_start = 'Start time is required'
+      if (!formData.shift_end) errs.shift_end = 'End time is required'
+      if (formData.shift_start && formData.shift_end && formData.shift_start >= formData.shift_end) {
+        errs.shift_end = 'End time must be after start time'
+      }
+    }
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -59,9 +72,9 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
     const staffData: Staff = {
       id: editStaff?.id || `staff_${Date.now()}`,
       tenant_id: 'tenant_001',
-      first_name: formData.first_name.trim(),
-      last_name: formData.last_name.trim(),
-      phone: formData.phone.trim(),
+      first_name: sanitizeInput(formData.first_name),
+      last_name: sanitizeInput(formData.last_name),
+      phone: sanitizePhone(formData.phone),
       email: formData.email.trim() || null,
       role: formData.role,
       status: editStaff?.status || 'active',
@@ -70,17 +83,17 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
       salary_frequency: 'monthly',
       shift: formData.shift,
       photo_url: null,
-      emergency_contact: formData.emergency_contact.trim() || null,
-      notes: formData.notes.trim() || null,
+      emergency_contact: formData.emergency_contact ? sanitizePhone(formData.emergency_contact) : null,
+      notes: formData.notes ? sanitizeInput(formData.notes) : null,
       created_at: editStaff?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       deleted_at: null,
     }
 
     if (isEdit) {
-      updateMutation.mutate(staffData, { onSuccess: onClose })
+      updateMutation.mutate(staffData, { onSuccess: () => { toast.success(`Staff "${formData.first_name}" updated successfully!`); onClose() } })
     } else {
-      createMutation.mutate(staffData, { onSuccess: onClose })
+      createMutation.mutate(staffData, { onSuccess: () => { toast.success(`Staff "${formData.first_name}" added successfully!`); onClose() } })
     }
   }
 
@@ -167,6 +180,7 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
                 className="form-input"
                 placeholder="+91 98765 43210"
                 value={formData.phone}
+                maxLength={13}
                 onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
               />
               {errors.phone && <span style={{ fontSize: '0.6875rem', color: 'var(--danger-600)' }}>{errors.phone}</span>}
@@ -211,6 +225,32 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
             </div>
           </div>
 
+          {/* Custom shift time pickers */}
+          {formData.shift === 'custom' && (
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label form-label-required">Shift Start Time</label>
+                <input
+                  className={`form-input ${errors.shift_start ? 'form-input-error' : ''}`}
+                  type="time"
+                  value={formData.shift_start}
+                  onChange={(e) => setFormData(p => ({ ...p, shift_start: e.target.value }))}
+                />
+                {errors.shift_start && <span style={{ fontSize: '0.6875rem', color: 'var(--danger-600)' }}>{errors.shift_start}</span>}
+              </div>
+              <div className="form-group">
+                <label className="form-label form-label-required">Shift End Time</label>
+                <input
+                  className={`form-input ${errors.shift_end ? 'form-input-error' : ''}`}
+                  type="time"
+                  value={formData.shift_end}
+                  onChange={(e) => setFormData(p => ({ ...p, shift_end: e.target.value }))}
+                />
+                {errors.shift_end && <span style={{ fontSize: '0.6875rem', color: 'var(--danger-600)' }}>{errors.shift_end}</span>}
+              </div>
+            </div>
+          )}
+
           {/* Salary */}
           <div className="grid-2">
             <div className="form-group">
@@ -230,6 +270,7 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
                 className="form-input"
                 placeholder="+91 ..."
                 value={formData.emergency_contact}
+                maxLength={13}
                 onChange={(e) => setFormData(p => ({ ...p, emergency_contact: e.target.value }))}
               />
             </div>

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
-import { X, ShieldAlert, Check, Calendar, CreditCard, ChevronRight, ChevronLeft } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X, Check, CreditCard, User, Phone, Tag, ChevronDown, ChevronUp, ExternalLink, AlertTriangle } from 'lucide-react'
+import { toast } from '@/components/Toast'
+import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { useMockDbStore } from '@/lib/mock-db'
-import { formatDate, formatPhone, formatCurrency, generateMemberCode } from '@/lib/utils'
+import { generateMemberCode } from '@/lib/utils'
 import type { Member, Membership, PaymentMethod, MembershipStatus, Lead } from '@/types'
-import { personalDetailsSchema, planDetailsSchema, paymentDetailsSchema } from '../schemas/member.schema'
+import { useNavigate } from 'react-router-dom'
 
 interface AddMemberDrawerProps {
   onClose: () => void
@@ -12,19 +14,25 @@ interface AddMemberDrawerProps {
   prefillLead?: Lead
 }
 
-type FormStep = 'personal' | 'plan' | 'payment' | 'review'
-
 export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefillLead }: AddMemberDrawerProps) {
-  const plans = useMockDbStore((state) => state.plans)
-  const [step, setStep] = useState<FormStep>('personal')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const navigate = useNavigate()
+  const plans = useMockDbStore((state) => state.plans).filter(p => p.is_active)
+  const members = useMockDbStore((state) => state.members)
+  
+  const defaultPlan = plans[0]
 
-  // Form State
-  const [personalData, setPersonalData] = useState({
-    first_name: prefillLead?.first_name || '',
-    last_name: prefillLead?.last_name || '',
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [createdMemberId, setCreatedMemberId] = useState<string | null>(null)
+
+  const [formData, setFormData] = useState({
+    fullName: prefillLead ? `${prefillLead.first_name} ${prefillLead.last_name || ''}`.trim() : '',
     phone: prefillLead?.phone ? prefillLead.phone.replace('+91', '') : '',
+    selectedPlanId: sessionStorage.getItem('last_selected_plan') || '',
+    amount_paid: 0,
+    payment_method: 'cash' as PaymentMethod,
+    // Advanced
     email: prefillLead?.email || '',
     gender: (prefillLead?.gender || '') as any,
     date_of_birth: '',
@@ -38,124 +46,60 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
     emergency_contact_phone: '',
   })
 
-  const [planData, setPlanData] = useState(() => {
-    const p = useMockDbStore.getState().plans
-    return {
-      selectedPlanId: p[0]?.id || '',
-      start_date: new Date().toISOString().split('T')[0],
-      actual_price: p[0]?.price || 0,
-      discount_amount: 0,
-      discount_reason: '',
-    }
-  })
-
-  const [paymentData, setPaymentData] = useState(() => {
-    const p = useMockDbStore.getState().plans
-    return {
-      amount_paid: p[0]?.price || 0,
-      payment_method: 'upi' as PaymentMethod,
-    }
-  })
-
-  // Watch for plan changes to update pricing
+  // Auto-update amount paid when plan changes
   useEffect(() => {
-    const plan = plans.find(p => p.id === planData.selectedPlanId)
+    const plan = plans.find(p => p.id === formData.selectedPlanId)
     if (plan) {
-      setPlanData(prev => ({
-        ...prev,
-        actual_price: plan.price,
-        discount_amount: 0,
-        discount_reason: '',
-      }))
-      setPaymentData(prev => ({
-        ...prev,
-        amount_paid: plan.price,
-      }))
+      setFormData(prev => ({ ...prev, amount_paid: plan.price }))
     }
-  }, [planData.selectedPlanId, plans])
+  }, [formData.selectedPlanId, plans])
 
-  // Watch for discount/price changes to update default payment amount
-  const netPrice = Math.max(0, planData.actual_price - planData.discount_amount)
-
-  useEffect(() => {
-    setPaymentData(prev => ({
-      ...prev,
-      amount_paid: netPrice,
-    }))
-  }, [netPrice])
-
-  // Validation
-  const validateStep = (currentStep: FormStep): boolean => {
-    const newErrors: Record<string, string> = {}
-
-    if (currentStep === 'personal') {
-      const result = personalDetailsSchema.safeParse(personalData)
-      if (!result.success) {
-        result.error.issues.forEach((issue) => {
-          const path = issue.path[0] as string
-          newErrors[path] = issue.message
-        })
-      }
-    }
-
-    if (currentStep === 'plan') {
-      const result = planDetailsSchema.safeParse(planData)
-      if (!result.success) {
-        result.error.issues.forEach((issue) => {
-          const path = issue.path[0] as string
-          newErrors[path] = issue.message
-        })
-      }
-    }
-
-    if (currentStep === 'payment') {
-      const result = paymentDetailsSchema.safeParse(paymentData)
-      if (!result.success) {
-        result.error.issues.forEach((issue) => {
-          const path = issue.path[0] as string
-          newErrors[path] = issue.message
-        })
-      }
-      if (paymentData.amount_paid > netPrice) {
-        newErrors.amount_paid = 'Amount paid cannot exceed net payable amount'
-      }
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const normalizePhone = (p: string) => {
+    let clean = p.replace(/\D/g, '')
+    if (clean.startsWith('91') && clean.length === 12) clean = clean.substring(2)
+    else if (clean.startsWith('0') && clean.length === 11) clean = clean.substring(1)
+    return clean
   }
 
-  const handleNext = () => {
-    if (!validateStep(step)) return
-    if (step === 'personal') setStep('plan')
-    else if (step === 'plan') setStep('payment')
-    else if (step === 'payment') setStep('review')
-  }
-
-  const handleBack = () => {
-    if (step === 'plan') setStep('personal')
-    else if (step === 'payment') setStep('plan')
-    else if (step === 'review') setStep('payment')
-  }
+  const existingDuplicate = members.find(m => {
+    const cleanInput = normalizePhone(formData.phone)
+    if (cleanInput.length < 10) return false
+    return normalizePhone(m.phone) === cleanInput
+  })
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateStep('review')) return
+
+    if (existingDuplicate) {
+      toast.error('This phone number is already registered.')
+      return
+    }
+
+    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.selectedPlanId) {
+      toast.error('Please fill all required fields.')
+      return
+    }
 
     setIsSubmitting(true)
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800))
 
-    const selectedPlan = plans.find(p => p.id === planData.selectedPlanId)!
-    const calculatedEndDate = new Date(planData.start_date)
+    // Split name safely
+    const nameParts = formData.fullName.trim().split(' ')
+    const first_name = nameParts[0]
+    const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
+
+    const selectedPlan = plans.find(p => p.id === formData.selectedPlanId)!
+    sessionStorage.setItem('last_selected_plan', selectedPlan.id)
+    
+    const start_date = new Date()
+    const calculatedEndDate = new Date(start_date)
     calculatedEndDate.setDate(calculatedEndDate.getDate() + selectedPlan.duration_days)
 
     const memberId = `mem_${Date.now()}`
     const membershipId = `ms_${Date.now()}`
     const newMemberCode = generateMemberCode(existingMembersCount + 1)
 
-    const tagsArray = personalData.tags
-      ? personalData.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+    const tagsArray = formData.tags
+      ? formData.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
       : []
 
     // Construct Member Object
@@ -164,36 +108,36 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
       tenant_id: 'tenant_001',
       branch_id: null,
       user_id: null,
-      lead_id: null,
+      lead_id: prefillLead?.id || null,
       member_code: newMemberCode,
-      first_name: personalData.first_name.trim(),
-      last_name: personalData.last_name.trim(),
-      phone: personalData.phone.startsWith('+91') ? personalData.phone : `+91${personalData.phone.replace(/\D/g, '')}`,
-      email: personalData.email.trim() || null,
-      gender: personalData.gender || null,
-      date_of_birth: personalData.date_of_birth || null,
-      address: personalData.address.trim() || null,
-      emergency_contact_name: personalData.emergency_contact_name.trim() || null,
-      emergency_contact_phone: personalData.emergency_contact_phone ? (personalData.emergency_contact_phone.startsWith('+91') ? personalData.emergency_contact_phone : `+91${personalData.emergency_contact_phone.replace(/\D/g, '')}`) : null,
+      first_name: sanitizeInput(first_name),
+      last_name: sanitizeInput(last_name),
+      phone: sanitizePhone(formData.phone.startsWith('+91') ? formData.phone : `+91${formData.phone.replace(/\D/g, '')}`),
+      email: formData.email.trim() || null,
+      gender: formData.gender || null,
+      date_of_birth: formData.date_of_birth || null,
+      address: formData.address ? sanitizeInput(formData.address) : null,
+      emergency_contact_name: formData.emergency_contact_name ? sanitizeInput(formData.emergency_contact_name) : null,
+      emergency_contact_phone: formData.emergency_contact_phone ? sanitizePhone(formData.emergency_contact_phone.startsWith('+91') ? formData.emergency_contact_phone : `+91${formData.emergency_contact_phone.replace(/\D/g, '')}`) : null,
       photo_url: null,
-      blood_group: personalData.blood_group || null,
-      medical_conditions: personalData.medical_conditions.trim() || null,
-      source: personalData.source || 'walk_in',
-      notes: personalData.notes.trim() || null,
+      blood_group: formData.blood_group || null,
+      medical_conditions: formData.medical_conditions ? sanitizeInput(formData.medical_conditions) : null,
+      source: formData.source || 'walk_in',
+      notes: formData.notes ? sanitizeInput(formData.notes) : null,
       qr_code: null,
       tags: tagsArray,
       status: 'active',
-      joined_at: new Date(planData.start_date).toISOString(),
+      joined_at: start_date.toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       deleted_at: null,
     }
 
-    // Determine status & payment status
+    // Determine payment status
     let payment_status: 'paid' | 'partial' | 'pending' = 'pending'
-    if (paymentData.amount_paid === netPrice && netPrice > 0) {
+    if (formData.amount_paid >= selectedPlan.price) {
       payment_status = 'paid'
-    } else if (paymentData.amount_paid > 0) {
+    } else if (formData.amount_paid > 0) {
       payment_status = 'partial'
     }
 
@@ -204,10 +148,10 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
       member_id: memberId,
       plan_id: selectedPlan.id,
       plan_name: selectedPlan.name,
-      start_date: planData.start_date,
+      start_date: start_date.toISOString().split('T')[0],
       end_date: calculatedEndDate.toISOString().split('T')[0],
-      actual_price: planData.actual_price,
-      discount_amount: planData.discount_amount,
+      actual_price: selectedPlan.price,
+      discount_amount: 0,
       status: 'active' as MembershipStatus,
       frozen_at: null,
       frozen_until: null,
@@ -219,519 +163,349 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
       deleted_at: null,
     }
 
+    // Wait slightly to show saving state (UX)
+    await new Promise(resolve => setTimeout(resolve, 300))
+
     onSubmit(newMember, newMembership)
+    setCreatedMemberId(memberId)
+    setIsSuccess(true)
     setIsSubmitting(false)
   }
 
-  const updatePersonalField = (field: string, value: string) => {
-    setPersonalData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => {
-        const next = { ...prev }
-        delete next[field]
-        return next
-      })
-    }
+  const handleReset = () => {
+    setFormData({
+      fullName: '',
+      phone: '',
+      selectedPlanId: sessionStorage.getItem('last_selected_plan') || '',
+      amount_paid: 0,
+      payment_method: 'cash',
+      email: '',
+      gender: '' as any,
+      date_of_birth: '',
+      blood_group: '',
+      medical_conditions: '',
+      source: 'walk_in',
+      notes: '',
+      tags: '',
+      address: '',
+      emergency_contact_name: '',
+      emergency_contact_phone: '',
+    })
+    setIsSuccess(false)
+    setCreatedMemberId(null)
+    setShowAdvanced(false)
   }
 
-  const selectedPlan = plans.find(p => p.id === planData.selectedPlanId)
+  const updateField = (field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer" style={{ maxWidth: '500px' }}>
-        {/* Header */}
+      <div className="drawer" style={{ maxWidth: '450px' }}>
         <div className="drawer-header">
-          <div>
-            <h2 className="drawer-title">Add New Member</h2>
-            <div className="flex items-center gap-1" style={{ marginTop: '0.25rem' }}>
-              <span className={`step-badge ${step === 'personal' ? 'active' : ''}`}>1. Personal</span>
-              <ChevronRight size={10} style={{ color: 'var(--text-tertiary)' }} />
-              <span className={`step-badge ${step === 'plan' ? 'active' : ''}`}>2. Plan</span>
-              <ChevronRight size={10} style={{ color: 'var(--text-tertiary)' }} />
-              <span className={`step-badge ${step === 'payment' ? 'active' : ''}`}>3. Payment</span>
-              <ChevronRight size={10} style={{ color: 'var(--text-tertiary)' }} />
-              <span className={`step-badge ${step === 'review' ? 'active' : ''}`}>4. Review</span>
-            </div>
-          </div>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <h2 className="drawer-title">Add New Member</h2>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} type="button">
             <X size={20} />
           </button>
         </div>
 
-        {/* Step Content */}
-        <div className="drawer-body">
-          {step === 'personal' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Name Row */}
-              <div className="grid-2">
-                <div className="form-group">
-                  <label className="form-label form-label-required">First Name</label>
-                  <input
-                    className={`form-input ${errors.first_name ? 'form-input-error' : ''}`}
-                    placeholder="e.g. Karan"
-                    value={personalData.first_name}
-                    onChange={(e) => updatePersonalField('first_name', e.target.value)}
-                    autoFocus
-                  />
-                  {errors.first_name && <span className="form-error">{errors.first_name}</span>}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Last Name</label>
-                  <input
-                    className="form-input"
-                    placeholder="e.g. Malhotra"
-                    value={personalData.last_name}
-                    onChange={(e) => updatePersonalField('last_name', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Phone & Email */}
-              <div className="form-group">
-                <label className="form-label form-label-required">Phone Number</label>
-                <input
-                  className={`form-input ${errors.phone ? 'form-input-error' : ''}`}
-                  placeholder="+91 99999 88888"
-                  value={personalData.phone}
-                  onChange={(e) => updatePersonalField('phone', e.target.value)}
-                  type="tel"
-                />
-                {errors.phone && <span className="form-error">{errors.phone}</span>}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <input
-                  className={`form-input ${errors.email ? 'form-input-error' : ''}`}
-                  placeholder="karan@example.com (optional)"
-                  value={personalData.email}
-                  onChange={(e) => updatePersonalField('email', e.target.value)}
-                  type="email"
-                />
-                {errors.email && <span className="form-error">{errors.email}</span>}
-              </div>
-
-              {/* Gender, DOB & Blood Group */}
-              <div className="grid-3">
-                <div className="form-group">
-                  <label className="form-label">Gender</label>
-                  <select
-                    className="form-input form-select"
-                    value={personalData.gender}
-                    onChange={(e) => updatePersonalField('gender', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer_not_to_say">Declined</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Birth Date</label>
-                  <input
-                    className="form-input"
-                    type="date"
-                    value={personalData.date_of_birth}
-                    onChange={(e) => updatePersonalField('date_of_birth', e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Blood Group</label>
-                  <select
-                    className="form-input form-select"
-                    value={personalData.blood_group}
-                    onChange={(e) => updatePersonalField('blood_group', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Emergency Contact */}
-              <div className="grid-2" style={{ padding: '0.875rem', background: 'var(--gray-50)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-primary)' }}>
-                <div className="form-group" style={{ gridColumn: 'span 2', marginBottom: '0.25rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>Emergency Contact</span>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Contact Name</label>
-                  <input
-                    className="form-input"
-                    placeholder="Relation Name"
-                    value={personalData.emergency_contact_name}
-                    onChange={(e) => updatePersonalField('emergency_contact_name', e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Contact Phone</label>
-                  <input
-                    className={`form-input ${errors.emergency_contact_phone ? 'form-input-error' : ''}`}
-                    placeholder="Phone number"
-                    value={personalData.emergency_contact_phone}
-                    onChange={(e) => updatePersonalField('emergency_contact_phone', e.target.value)}
-                    type="tel"
-                  />
-                  {errors.emergency_contact_phone && <span className="form-error">{errors.emergency_contact_phone}</span>}
-                </div>
-              </div>
-
-              {/* Address */}
-              <div className="form-group">
-                <label className="form-label">Address</label>
-                <input
-                  className="form-input"
-                  placeholder="Apt, street, locality..."
-                  value={personalData.address}
-                  onChange={(e) => updatePersonalField('address', e.target.value)}
-                />
-              </div>
-
-              {/* Medical Conditions */}
-              <div className="form-group">
-                <label className="form-label">Medical Conditions / Injuries</label>
-                <input
-                  className="form-input"
-                  placeholder="e.g. Asthma, Knee pain, Hypertension (optional)"
-                  value={personalData.medical_conditions}
-                  onChange={(e) => updatePersonalField('medical_conditions', e.target.value)}
-                />
-              </div>
-
-              {/* Source & Notes */}
-              <div className="form-group">
-                <label className="form-label">How did they find us?</label>
-                <select
-                  className="form-input form-select"
-                  value={personalData.source}
-                  onChange={(e) => updatePersonalField('source', e.target.value)}
-                >
-                  <option value="walk_in">Walk-in</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="google">Google Search</option>
-                  <option value="referral">Member Referral</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Tags (comma-separated)</label>
-                <input
-                  className="form-input"
-                  placeholder="e.g. VIP, Personal Training, Weight Loss"
-                  value={personalData.tags}
-                  onChange={(e) => updatePersonalField('tags', e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Notes</label>
-                <textarea
-                  className="form-input"
-                  placeholder="Any extra info about the member..."
-                  value={personalData.notes}
-                  onChange={(e) => updatePersonalField('notes', e.target.value)}
-                  rows={2}
-                />
-              </div>
+        {isSuccess ? (
+          <div className="drawer-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '3rem 1.5rem' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--success-100)', color: 'var(--success-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <Check size={32} />
             </div>
-          )}
-
-          {step === 'plan' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {/* Select Plan */}
-              <div className="form-group">
-                <label className="form-label form-label-required">Membership Plan</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {plans.map((plan) => (
-                    <label
-                      key={plan.id}
-                      className={`card select-plan-card ${planData.selectedPlanId === plan.id ? 'selected' : ''}`}
-                      style={{
-                        padding: '1rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'between',
-                        alignItems: 'center',
-                        borderWidth: planData.selectedPlanId === plan.id ? '2px' : '1px',
-                        borderColor: planData.selectedPlanId === plan.id ? 'var(--primary-600)' : 'var(--border-primary)',
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="selectedPlanId"
-                        value={plan.id}
-                        checked={planData.selectedPlanId === plan.id}
-                        onChange={() => setPlanData(prev => ({ ...prev, selectedPlanId: plan.id }))}
-                        className="sr-only"
-                        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{plan.name}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>({plan.duration_days} days)</span>
-                        </div>
-                        {plan.description && (
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.125rem' }}>
-                            {plan.description}
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ fontWeight: 700, color: 'var(--primary-700)', fontSize: '1rem' }}>
-                        {formatCurrency(plan.price)}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Start Date */}
-              <div className="form-group">
-                <label className="form-label form-label-required">Membership Start Date</label>
-                <input
-                  className={`form-input ${errors.start_date ? 'form-input-error' : ''}`}
-                  type="date"
-                  value={planData.start_date}
-                  onChange={(e) => setPlanData(prev => ({ ...prev, start_date: e.target.value }))}
-                />
-                {selectedPlan && planData.start_date && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.375rem' }}>
-                    <Calendar size={12} />
-                    Ends on {formatDate(new Date(new Date(planData.start_date).getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000))}
-                  </div>
-                )}
-              </div>
-
-              {/* Pricing breakdown */}
-              <div className="card" style={{ padding: '1rem', background: 'var(--gray-50)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div className="flex justify-between" style={{ fontSize: '0.8125rem' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>Base Price</span>
-                    <span style={{ fontWeight: 500 }}>{formatCurrency(planData.actual_price)}</span>
-                  </div>
-
-                  {/* Apply Discount */}
-                  <div className="grid-2" style={{ alignItems: 'start', gap: '0.5rem' }}>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Discount Amount (₹)</label>
-                      <input
-                        className={`form-input ${errors.discount_amount ? 'form-input-error' : ''}`}
-                        type="number"
-                        placeholder="0"
-                        value={planData.discount_amount || ''}
-                        onChange={(e) => setPlanData(prev => ({ ...prev, discount_amount: Number(e.target.value) }))}
-                      />
-                      {errors.discount_amount && <span className="form-error">{errors.discount_amount}</span>}
-                    </div>
-                    <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Discount Reason</label>
-                      <input
-                        className={`form-input ${errors.discount_reason ? 'form-input-error' : ''}`}
-                        placeholder="e.g. Friend offer, Student discount"
-                        value={planData.discount_reason}
-                        onChange={(e) => setPlanData(prev => ({ ...prev, discount_reason: e.target.value }))}
-                        disabled={!planData.discount_amount}
-                      />
-                      {errors.discount_reason && <span className="form-error">{errors.discount_reason}</span>}
-                    </div>
-                  </div>
-
-                  <hr style={{ border: 'none', borderTop: '1px solid var(--border-primary)', margin: '0.25rem 0' }} />
-
-                  <div className="flex justify-between" style={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                    <span>Net Payable</span>
-                    <span style={{ color: 'var(--primary-600)' }}>{formatCurrency(netPrice)}</span>
-                  </div>
-                </div>
-              </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Member Added Successfully!</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+              The member profile, active plan, and payment receipt have been generated.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              <button className="btn btn-primary" onClick={handleReset} style={{ width: '100%', justifyContent: 'center' }}>
+                <User size={18} />
+                Record Another Member
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  onClose()
+                  if (createdMemberId) {
+                    navigate(`/members?id=${createdMemberId}`)
+                  }
+                }} 
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                <ExternalLink size={18} />
+                View Member Profile
+              </button>
             </div>
-          )}
+          </div>
+        ) : (
+          <form id="add-member-form" className="drawer-body" onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Quick Entry Fields */}
+            <div className="form-group">
+              <label className="form-label form-label-required">Full Name</label>
+              <input
+                className="form-input"
+                placeholder="e.g. Karan Malhotra"
+                value={formData.fullName}
+                onChange={(e) => updateField('fullName', e.target.value)}
+                autoFocus
+                required
+              />
+            </div>
 
-          {step === 'payment' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div className="card" style={{ padding: '1rem', background: 'var(--primary-50)', color: 'var(--primary-900)', border: '1px solid var(--primary-100)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 500, opacity: 0.8 }}>Total Net Payable</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatCurrency(netPrice)}</div>
+            <div className="form-group">
+              <label className="form-label form-label-required">Phone Number</label>
+              <input
+                className="form-input"
+                placeholder="e.g. 9999988888"
+                value={formData.phone}
+                onChange={(e) => updateField('phone', e.target.value)}
+                type="tel"
+                maxLength={10}
+                required
+              />
+              {existingDuplicate && (
+                <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', color: 'var(--warning-800)', fontSize: '0.8125rem' }}>
+                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <span style={{ fontWeight: 500, lineHeight: 1.4 }}>
+                      Phone number already belongs to <strong>{existingDuplicate.first_name} {existingDuplicate.last_name}</strong>.
+                    </span>
                   </div>
-                  <CreditCard size={32} style={{ opacity: 0.5 }} />
+                  <button 
+                    type="button" 
+                    className="btn btn-sm" 
+                    style={{ background: 'white', border: '1px solid var(--warning-300)', color: 'var(--warning-800)', alignSelf: 'flex-start' }}
+                    onClick={() => {
+                      onClose()
+                      navigate(`/members?id=${existingDuplicate.id}`)
+                    }}
+                  >
+                    Open Existing Profile
+                  </button>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Amount Paid */}
+            <div className="form-group">
+              <label className="form-label form-label-required">Membership Plan</label>
+              <select
+                className="form-input form-select"
+                value={formData.selectedPlanId}
+                onChange={(e) => updateField('selectedPlanId', e.target.value)}
+                required
+              >
+                <option value="" disabled>Select a plan...</option>
+                {plans.map(plan => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name} (₹{plan.price})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid-2">
               <div className="form-group">
-                <label className="form-label form-label-required">Amount Paid Now (₹)</label>
+                <label className="form-label form-label-required">Amount Received (₹)</label>
                 <input
-                  className={`form-input ${errors.amount_paid ? 'form-input-error' : ''}`}
+                  className="form-input"
                   type="number"
-                  placeholder={netPrice.toString()}
-                  value={paymentData.amount_paid}
-                  onChange={(e) => setPaymentData(prev => ({ ...prev, amount_paid: Number(e.target.value) }))}
+                  min="0"
+                  value={formData.amount_paid}
+                  onChange={(e) => updateField('amount_paid', Number(e.target.value))}
+                  required
                 />
-                {errors.amount_paid && <span className="form-error">{errors.amount_paid}</span>}
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                    onClick={() => setPaymentData(prev => ({ ...prev, amount_paid: netPrice }))}
-                  >
-                    Pay Full (₹{netPrice})
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
-                    onClick={() => setPaymentData(prev => ({ ...prev, amount_paid: 0 }))}
-                  >
-                    Pay Later (₹0)
-                  </button>
-                </div>
               </div>
 
-              {/* Payment Method */}
               <div className="form-group">
-                <label className="form-label">Payment Method</label>
+                <label className="form-label form-label-required">Payment Method</label>
                 <select
                   className="form-input form-select"
-                  value={paymentData.payment_method}
-                  onChange={(e) => setPaymentData(prev => ({ ...prev, payment_method: e.target.value as PaymentMethod }))}
-                  disabled={paymentData.amount_paid === 0}
+                  value={formData.payment_method}
+                  onChange={(e) => updateField('payment_method', e.target.value)}
+                  required
                 >
-                  <option value="upi">UPI (GPay, PhonePe, Paytm)</option>
                   <option value="cash">Cash</option>
+                  <option value="upi">UPI (GPay/PhonePe)</option>
                   <option value="card">Card</option>
                   <option value="bank_transfer">Bank Transfer</option>
                 </select>
               </div>
-
-              {/* Pending Due alert */}
-              {netPrice - paymentData.amount_paid > 0 && (
-                <div className="flex gap-2" style={{ padding: '0.875rem', background: 'var(--warning-50)', color: 'var(--warning-800)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--warning-100)', fontSize: '0.8125rem' }}>
-                  <ShieldAlert size={16} style={{ flexShrink: 0, marginTop: '2px', color: 'var(--warning-600)' }} />
-                  <div>
-                    <span style={{ fontWeight: 600 }}>Partial Payment.</span> Remaining balance of{' '}
-                    <span style={{ fontWeight: 700 }}>{formatCurrency(netPrice - paymentData.amount_paid)}</span> will be tracked as a pending due on the membership.
-                  </div>
-                </div>
-              )}
             </div>
-          )}
 
-          {step === 'review' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {/* Member profile summary */}
-              <div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>Member Profile</h3>
-                <div className="card" style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div className="avatar avatar-md" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>
-                      {personalData.first_name[0] || '?'}{personalData.last_name[0] || ''}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{personalData.first_name} {personalData.last_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{formatPhone(personalData.phone)}</div>
-                    </div>
+            {(() => {
+              const selectedPlan = plans.find(p => p.id === formData.selectedPlanId)
+              if (selectedPlan && formData.amount_paid < selectedPlan.price) {
+                const balance = selectedPlan.price - formData.amount_paid
+                return (
+                  <div style={{ marginTop: '-0.5rem', padding: '0.75rem', background: 'var(--warning-50)', border: '1px solid var(--warning-200)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--warning-800)', fontSize: '0.8125rem' }}>
+                    <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                    <span style={{ fontWeight: 500, lineHeight: 1.4 }}>
+                      Partial Payment: <strong>₹{balance}</strong> will be marked as pending due.
+                    </span>
                   </div>
-                  {personalData.email && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                      <strong>Email:</strong> {personalData.email}
-                    </div>
-                  )}
-                  {(personalData.emergency_contact_name || personalData.medical_conditions) && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-primary)', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
-                      {personalData.medical_conditions && <div><strong>Medical:</strong> {personalData.medical_conditions}</div>}
-                      {personalData.emergency_contact_name && <div><strong>Emergency:</strong> {personalData.emergency_contact_name} ({formatPhone(personalData.emergency_contact_phone)})</div>}
-                    </div>
-                  )}
-                </div>
-              </div>
+                )
+              }
+              return null
+            })()}
 
-              {/* Plan Summary */}
-              <div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>Plan & Pricing</h3>
-                <div className="card" style={{ padding: '1rem' }}>
-                  <div className="flex justify-between" style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                    <span>{selectedPlan?.name}</span>
-                    <span>{formatCurrency(planData.actual_price)}</span>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <div><strong>Duration:</strong> {selectedPlan?.duration_days} Days</div>
-                    <div><strong>Validity:</strong> {formatDate(planData.start_date)} to {selectedPlan ? formatDate(new Date(new Date(planData.start_date).getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000)) : ''}</div>
-                    {planData.discount_amount > 0 && (
-                      <div style={{ color: 'var(--warning-700)', display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--border-primary)', paddingTop: '0.25rem', marginTop: '0.25rem' }}>
-                        <span>Discount: {planData.discount_reason ? `(${planData.discount_reason})` : ''}</span>
-                        <span>- {formatCurrency(planData.discount_amount)}</span>
-                      </div>
-                    )}
-                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-primary)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                      <span>Net Price:</span>
-                      <span>{formatCurrency(netPrice)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Summary */}
-              <div>
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>Payment Status</h3>
-                <div className="card" style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div className="flex justify-between" style={{ fontSize: '0.8125rem' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>Amount Paid:</span>
-                      <span style={{ fontWeight: 600, color: 'var(--success-600)' }}>{formatCurrency(paymentData.amount_paid)}</span>
-                    </div>
-                    {paymentData.amount_paid > 0 && (
-                      <div className="flex justify-between" style={{ fontSize: '0.8125rem' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>Payment Method:</span>
-                        <span style={{ fontWeight: 500, textTransform: 'uppercase' }}>{paymentData.payment_method}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between" style={{ fontSize: '0.8125rem', borderTop: '1px dashed var(--border-primary)', paddingTop: '0.5rem' }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>Pending Balance:</span>
-                      <span style={{ fontWeight: 600, color: netPrice - paymentData.amount_paid > 0 ? 'var(--danger-600)' : 'var(--text-secondary)' }}>
-                        {formatCurrency(netPrice - paymentData.amount_paid)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Advanced Section Toggle */}
+            <div style={{ borderTop: '1px solid var(--border-secondary)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  width: '100%', 
+                  background: 'none', 
+                  border: 'none', 
+                  padding: '0.5rem', 
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  fontWeight: 500,
+                  fontSize: '0.875rem'
+                }}
+              >
+                Complete Profile (Optional)
+                {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
             </div>
-          )}
-        </div>
+
+            {/* Advanced Details */}
+            {showAdvanced && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'fadeIn 0.2s ease-out' }}>
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    className="form-input"
+                    type="email"
+                    placeholder="karan@example.com"
+                    value={formData.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                  />
+                </div>
+
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Gender</label>
+                    <select
+                      className="form-input form-select"
+                      value={formData.gender}
+                      onChange={(e) => updateField('gender', e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Birth Date</label>
+                    <input
+                      className="form-input"
+                      type="date"
+                      value={formData.date_of_birth}
+                      onChange={(e) => updateField('date_of_birth', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Blood Group</label>
+                    <select
+                      className="form-input form-select"
+                      value={formData.blood_group}
+                      onChange={(e) => updateField('blood_group', e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      <option value="A+">A+</option><option value="A-">A-</option>
+                      <option value="B+">B+</option><option value="B-">B-</option>
+                      <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                      <option value="O+">O+</option><option value="O-">O-</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Source</label>
+                    <select
+                      className="form-input form-select"
+                      value={formData.source}
+                      onChange={(e) => updateField('source', e.target.value)}
+                    >
+                      <option value="walk_in">Walk-in</option>
+                      <option value="instagram">Instagram</option>
+                      <option value="google">Google</option>
+                      <option value="referral">Referral</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Medical Conditions</label>
+                  <input
+                    className="form-input"
+                    placeholder="e.g. Asthma, Knee pain"
+                    value={formData.medical_conditions}
+                    onChange={(e) => updateField('medical_conditions', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Address</label>
+                  <input
+                    className="form-input"
+                    placeholder="Local address..."
+                    value={formData.address}
+                    onChange={(e) => updateField('address', e.target.value)}
+                  />
+                </div>
+
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Emergency Name</label>
+                    <input
+                      className="form-input"
+                      placeholder="Name"
+                      value={formData.emergency_contact_name}
+                      onChange={(e) => updateField('emergency_contact_name', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Emergency Phone</label>
+                    <input
+                      className="form-input"
+                      type="tel"
+                      placeholder="Phone"
+                      value={formData.emergency_contact_phone}
+                      onChange={(e) => updateField('emergency_contact_phone', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* The invisible submit is removed. The main button uses type="submit" */}
+          </form>
+        )}
 
         {/* Footer */}
-        <div className="drawer-footer">
-          {step !== 'personal' ? (
-            <button type="button" className="btn btn-secondary" onClick={handleBack} disabled={isSubmitting}>
-              <ChevronLeft size={16} />
-              Back
-            </button>
-          ) : (
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+        {!isSuccess && (
+          <div className="drawer-footer">
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </button>
-          )}
-
-          {step !== 'review' ? (
-            <button type="button" className="btn btn-primary" onClick={handleNext}>
-              Next
-              <ChevronRight size={16} />
-            </button>
-          ) : (
-            <button type="button" className="btn btn-success" onClick={handleFormSubmit} disabled={isSubmitting}>
+            <button 
+              type="submit" 
+              form="add-member-form"
+              className="btn btn-primary" 
+              onClick={handleFormSubmit} 
+              disabled={isSubmitting || !!existingDuplicate}
+              style={{ flex: 1, justifyContent: 'center' }}
+            >
               {isSubmitting ? (
                 <>
                   <span className="spinner spinner-sm" style={{ borderTopColor: 'white', borderColor: 'rgba(255,255,255,0.3)' }} />
@@ -740,12 +514,12 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
               ) : (
                 <>
                   <Check size={16} />
-                  Register Member
+                  Save Member
                 </>
               )}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </>
   )

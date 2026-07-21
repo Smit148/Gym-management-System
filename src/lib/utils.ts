@@ -83,3 +83,15 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     timer = setTimeout(() => fn(...args), delay)
   }
 }
+
+/** Escape HTML special characters to prevent XSS in raw HTML strings */
+export function escapeHtml(str: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }
+  return str.replace(/[&<>"']/g, (c) => map[c] || c)
+}

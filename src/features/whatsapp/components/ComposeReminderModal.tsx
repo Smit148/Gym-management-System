@@ -33,7 +33,14 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
   const validate = () => {
     const errs: Record<string, string> = {}
     if (!recipientName.trim()) errs.recipientName = 'Recipient name is required'
-    if (!recipientPhone.trim()) errs.recipientPhone = 'Phone number is required'
+    if (!recipientPhone.trim()) {
+      errs.recipientPhone = 'Phone number is required'
+    } else {
+      const digits = recipientPhone.replace(/\D/g, '')
+      if (digits.length < 10) {
+        errs.recipientPhone = 'Phone number must be at least 10 digits'
+      }
+    }
     if (!selectedTemplateId && !customMessage.trim()) errs.message = 'Select a template or write a message'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -43,6 +50,8 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
     e.preventDefault()
     if (!validate()) return
 
+    const reminderMessage = getResolvedMessage()
+
     const reminder: WhatsAppReminder = {
       id: `wa_${Date.now()}`,
       tenant_id: 'tenant_001',
@@ -50,7 +59,7 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
       template_name: selectedTemplate?.name || 'Custom Message',
       recipient_name: recipientName.trim(),
       recipient_phone: recipientPhone.trim(),
-      message: getResolvedMessage(),
+      message: reminderMessage,
       type: (selectedTemplate?.type || 'custom') as ReminderType,
       status: 'sent',
       scheduled_at: new Date().toISOString(),
@@ -60,7 +69,15 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
       deleted_at: null,
     }
 
-    sendMutation.mutate(reminder, { onSuccess: onClose })
+    sendMutation.mutate(reminder, {
+      onSuccess: () => {
+        const phoneDigits = recipientPhone.replace(/\D/g, '')
+        const phoneWithCountry = phoneDigits.startsWith('91') && phoneDigits.length > 10 ? phoneDigits : `91${phoneDigits.slice(-10)}`
+        const url = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(reminderMessage)}`
+        window.open(url, '_blank')
+        onClose()
+      }
+    })
   }
 
   return (
@@ -102,6 +119,19 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Free Info Alert */}
+          <div style={{
+            padding: '0.75rem 1rem',
+            background: 'var(--primary-50)',
+            border: '1px solid var(--primary-100)',
+            color: 'var(--primary-700)',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: '0.75rem',
+            lineHeight: 1.4,
+          }}>
+            💡 <strong>100% Free:</strong> This opens WhatsApp with your pre-filled message. No WhatsApp API costs or setup charges apply!
+          </div>
+
           {/* Template Selector */}
           <div className="form-group">
             <label className="form-label">Message Template</label>
@@ -135,6 +165,7 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
                 className="form-input"
                 placeholder="+91 98765 43210"
                 value={recipientPhone}
+                maxLength={13}
                 onChange={(e) => setRecipientPhone(e.target.value)}
               />
               {errors.recipientPhone && <span style={{ fontSize: '0.6875rem', color: 'var(--danger-600)' }}>{errors.recipientPhone}</span>}

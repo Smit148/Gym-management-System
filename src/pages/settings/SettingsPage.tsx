@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Settings, Save, Sparkles, Loader2, CheckCircle2 } from 'lucide-react'
 import { useSettings, useUpdateSettings } from '@/features/settings/hooks/useSettings'
 import { useThemeStore } from '@/store/theme.store'
+import { PlanManagement } from '@/features/settings/components/PlanManagement'
 import type { GymSettings } from '@/types'
 
 export function SettingsPage() {
@@ -225,6 +226,8 @@ export function SettingsPage() {
             </div>
           </div>
 
+
+
           {/* Success Dialog Popup */}
           {showSuccessToast && (
             <div style={{
@@ -246,6 +249,8 @@ export function SettingsPage() {
             </div>
           )}
         </div>
+        
+        <PlanManagement />
       </div>
     </div>
   )

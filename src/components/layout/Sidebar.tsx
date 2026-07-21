@@ -13,6 +13,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
 import { useUIStore } from '@/store/ui.store'
 import { useAuthStore } from '@/store/auth.store'
@@ -42,7 +44,7 @@ const sectionLabels: Record<string, string> = {
 
 export function Sidebar() {
   const location = useLocation()
-  const { sidebarOpen, setSidebarOpen } = useUIStore()
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, toggleSidebarCollapse } = useUIStore()
   const { logout, user } = useAuthStore()
 
   // Group items by section
@@ -67,19 +69,22 @@ export function Sidebar() {
         onClick={() => setSidebarOpen(false)}
       />
 
-      <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         {/* Logo */}
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">G</div>
-          <span className="sidebar-logo-text">GymOS</span>
+          {!sidebarCollapsed && <span className="sidebar-logo-text">GymOS</span>}
         </div>
 
         {/* Navigation */}
         <nav className="sidebar-nav">
           {Object.entries(sections).map(([section, items]) => (
             <div key={section}>
-              {sectionLabels[section] && (
+              {sectionLabels[section] && !sidebarCollapsed && (
                 <div className="sidebar-section-label">{sectionLabels[section]}</div>
+              )}
+              {sectionLabels[section] && sidebarCollapsed && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', margin: '0.375rem 0.75rem' }} />
               )}
               {items.map((item) => {
                 const Icon = item.icon
@@ -92,10 +97,11 @@ export function Sidebar() {
                     to={item.path}
                     className={`sidebar-link ${isActive ? 'active' : ''}`}
                     onClick={handleNavClick}
+                    title={sidebarCollapsed ? item.label : undefined}
                   >
                     <Icon className="sidebar-link-icon" />
-                    <span>{item.label}</span>
-                    {item.badge !== undefined && (
+                    {!sidebarCollapsed && <span>{item.label}</span>}
+                    {!sidebarCollapsed && item.badge !== undefined && (
                       <span
                         className="sidebar-link-badge"
                         style={typeof item.badge === 'string' ? {
@@ -115,13 +121,29 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Footer - User Info */}
+        {/* Footer - Collapse + User Info */}
         <div className="sidebar-footer">
-          <button className="sidebar-link" onClick={logout}>
-            <LogOut className="sidebar-link-icon" />
-            <span>Logout</span>
+          {/* Collapse toggle — only on desktop */}
+          <button
+            className="sidebar-link sidebar-collapse-toggle"
+            onClick={toggleSidebarCollapse}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="sidebar-link-icon" />
+            ) : (
+              <>
+                <PanelLeftClose className="sidebar-link-icon" />
+                <span>Collapse</span>
+              </>
+            )}
           </button>
-          {user && (
+
+          <button className="sidebar-link" onClick={logout} title={sidebarCollapsed ? 'Logout' : undefined}>
+            <LogOut className="sidebar-link-icon" />
+            {!sidebarCollapsed && <span>Logout</span>}
+          </button>
+          {user && !sidebarCollapsed && (
             <div style={{ padding: '0.5rem 0.75rem', marginTop: '0.25rem' }}>
               <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'white' }}>
                 {user.first_name} {user.last_name}

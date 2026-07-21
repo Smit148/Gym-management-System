@@ -258,7 +258,12 @@ export function AttendancePage() {
         <DataTable
           data={filteredLogs}
           columns={columns}
-          searchPlaceholder="Search by member name..."
+          searchPlaceholder="Search by member name, code..."
+          searchField={(log: Attendance, query: string) => {
+            return (log.member_name || '').toLowerCase().includes(query) ||
+              (log.member_code || '').toLowerCase().includes(query) ||
+              (log.notes || '').toLowerCase().includes(query)
+          }}
           isLoading={isLoading}
           emptyState={{
             title: 'No check-in logs found',

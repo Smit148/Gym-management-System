@@ -1,5 +1,5 @@
 import { X, Printer, Share2, User, CheckCircle2, FileText } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, escapeHtml } from '@/lib/utils'
 import { useMemberships } from '@/features/members/hooks/useMembers'
 import type { Payment } from '@/types'
 
@@ -21,7 +21,7 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
       printWindow.document.write(`
         <html>
           <head>
-            <title>Receipt - ${payment.receipt_number || payment.id}</title>
+            <title>Receipt - ${escapeHtml(payment.receipt_number || payment.id)}</title>
             <style>
               body { font-family: sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
               .header { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
@@ -46,22 +46,22 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
               </div>
               <div>
                 <div class="title">Payment Receipt</div>
-                <div style="font-size: 14px; font-weight: bold; color: #1e293b;">${payment.receipt_number || 'Receipt Draft'}</div>
+                <div style="font-size: 14px; font-weight: bold; color: #1e293b;">${escapeHtml(payment.receipt_number || 'Receipt Draft')}</div>
               </div>
             </div>
             
             <div class="meta-grid">
               <div class="meta-block">
                 <h3>Billed To</h3>
-                <strong>${payment.member_name || 'Valued Member'}</strong><br/>
-                Member ID: ${payment.member_id}<br/>
-                Payment Date: ${formatDate(payment.paid_at)}
+                <strong>${escapeHtml(payment.member_name || 'Valued Member')}</strong><br/>
+                Member ID: ${escapeHtml(payment.member_id)}<br/>
+                Payment Date: ${escapeHtml(formatDate(payment.paid_at))}
               </div>
               <div class="meta-block">
                 <h3>Payment Info</h3>
-                Method: ${payment.payment_method.toUpperCase()}<br/>
+                Method: ${escapeHtml(payment.payment_method.toUpperCase())}<br/>
                 Status: Completed<br/>
-                ${payment.reference_number ? `Transaction Ref: ${payment.reference_number}` : ''}
+                ${payment.reference_number ? `Transaction Ref: ${escapeHtml(payment.reference_number)}` : ''}
               </div>
             </div>
 
@@ -75,8 +75,8 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
               <tbody>
                 <tr>
                   <td>
-                    <strong>${membership?.plan_name || 'Gym Membership Renewal'}</strong><br/>
-                    ${membership ? `Validity: ${formatDate(membership.start_date)} to ${formatDate(membership.end_date)}` : 'Manual charge / outstanding balance collection'}
+                    <strong>${escapeHtml(membership?.plan_name || 'Gym Membership Renewal')}</strong><br/>
+                    ${membership ? `Validity: ${escapeHtml(formatDate(membership.start_date))} to ${escapeHtml(formatDate(membership.end_date))}` : 'Manual charge / outstanding balance collection'}
                   </td>
                   <td style="text-align: right;">₹${payment.amount.toLocaleString('en-IN')}</td>
                 </tr>

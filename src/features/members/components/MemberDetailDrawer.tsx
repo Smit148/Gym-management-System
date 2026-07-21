@@ -569,6 +569,21 @@ export function MemberDetailDrawer({
                     )}
                   </div>
 
+                  {/* Freeze Info Explainer */}
+                  <div style={{
+                    padding: '0.75rem 1rem',
+                    background: 'var(--gray-50)',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-primary)',
+                    fontSize: '0.75rem',
+                    lineHeight: 1.5,
+                    color: 'var(--text-secondary)',
+                  }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>❄️ What is Freeze?</strong>
+                    <br />
+                    Freezing pauses the membership temporarily. The remaining days are preserved and the expiry date is extended by the freeze duration. Use this for injuries, travel, exams, or emergencies. Members cannot check in while frozen.
+                  </div>
+
                   {/* Actions */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {member.status === 'frozen' ? (

@@ -153,13 +153,13 @@ export function TasksPage() {
       {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Gym Tasks & Reminders</h1>
+          <h1 className="page-title">Tasks</h1>
           <p className="page-subtitle">Track staff operations, member callbacks, and administrative actions</p>
         </div>
         <div>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
             <Plus size={16} />
-            Create Todo
+            Add Task
           </button>
         </div>
       </div>

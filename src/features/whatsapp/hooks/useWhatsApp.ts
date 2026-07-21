@@ -60,3 +60,15 @@ export function useCancelReminder() {
     },
   })
 }
+
+export function useRetryReminder() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (reminderId: string) => whatsappApi.markAsSent(reminderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['whatsappReminders'] })
+    },
+  })
+}
+

@@ -39,6 +39,7 @@ const shiftLabels: Record<string, string> = {
   evening: 'Evening',
   full_day: 'Full Day',
   flexible: 'Flexible',
+  custom: 'Custom',
 }
 
 const statusBadge: Record<string, { className: string; label: string }> = {
@@ -135,12 +136,17 @@ export function StaffPage() {
     {
       key: 'shift',
       header: 'Shift',
-      render: (s) => (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-          <Clock size={12} style={{ color: 'var(--text-tertiary)' }} />
-          {shiftLabels[s.shift]}
-        </span>
-      ),
+      render: (s) => {
+        const label = s.shift === 'custom' && (s as any).shift_start
+          ? `${(s as any).shift_start} – ${(s as any).shift_end}`
+          : shiftLabels[s.shift]
+        return (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+            <Clock size={12} style={{ color: 'var(--text-tertiary)' }} />
+            {label}
+          </span>
+        )
+      },
     },
     {
       key: 'salary_amount',
@@ -335,7 +341,9 @@ export function StaffPage() {
                 {([
                   { label: 'Phone', value: formatPhone(selectedStaff.phone) },
                   { label: 'Email', value: selectedStaff.email || '—' },
-                  { label: 'Shift', value: shiftLabels[selectedStaff.shift] },
+                  { label: 'Shift', value: selectedStaff.shift === 'custom' && (selectedStaff as any).shift_start
+                    ? `Custom (${(selectedStaff as any).shift_start} – ${(selectedStaff as any).shift_end})`
+                    : shiftLabels[selectedStaff.shift] },
                   { label: 'Monthly Salary', value: formatCurrency(selectedStaff.salary_amount) },
                   { label: 'Joined', value: formatDate(selectedStaff.joined_at, 'long') },
                   { label: 'Emergency Contact', value: selectedStaff.emergency_contact ? formatPhone(selectedStaff.emergency_contact) : '—' },

@@ -2,13 +2,13 @@ import {
   Users,
   TrendingUp,
   AlertTriangle,
-  PhoneCall,
-  UserPlus,
+  Target,
   CreditCard,
   ClipboardCheck,
-  Target,
+  ListTodo,
   Award,
   UserPlus as UserPlusIcon,
+  ArrowUpFromLine,
   Loader2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -118,30 +118,7 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Card 4: Follow-Ups Due Today */}
-        <div
-          className="stat-card"
-          onClick={() => navigate('/leads?filter=followup')}
-          role="button"
-          tabIndex={0}
-          aria-label="View follow-ups"
-        >
-          <div
-            className="stat-card-icon"
-            style={{ background: '#FDF4FF', color: '#9333EA' }}
-          >
-            <PhoneCall size={20} />
-          </div>
-          <div className="stat-card-value">
-            {stats.followups_due_today + stats.tasks_due_today}
-          </div>
-          <div className="stat-card-label">Follow-Ups Due Today</div>
-          <div className="stat-card-sublabel">
-            {stats.followups_due_today} leads · {stats.tasks_due_today} tasks
-          </div>
-        </div>
-
-        {/* Card 5: New Enquiries */}
+        {/* Card 4: Leads Overview */}
         <div
           className="stat-card"
           onClick={() => navigate('/leads')}
@@ -151,13 +128,36 @@ export function DashboardPage() {
         >
           <div
             className="stat-card-icon"
+            style={{ background: '#FDF4FF', color: '#9333EA' }}
+          >
+            <Target size={20} />
+          </div>
+          <div className="stat-card-value">
+            {stats.new_enquiries_week + stats.followups_due_today}
+          </div>
+          <div className="stat-card-label">Active Leads</div>
+          <div className="stat-card-sublabel">
+            {stats.followups_due_today} follow-ups due · {stats.new_enquiries_week} new this week
+          </div>
+        </div>
+
+        {/* Card 5: Pending Tasks */}
+        <div
+          className="stat-card"
+          onClick={() => navigate('/tasks')}
+          role="button"
+          tabIndex={0}
+          aria-label="View tasks"
+        >
+          <div
+            className="stat-card-icon"
             style={{ background: 'var(--info-50)', color: 'var(--info-600)' }}
           >
-            <UserPlus size={20} />
+            <ListTodo size={20} />
           </div>
-          <div className="stat-card-value">{stats.new_enquiries_week}</div>
-          <div className="stat-card-label">New Enquiries</div>
-          <div className="stat-card-sublabel">{stats.conversion_rate}% conversion rate</div>
+          <div className="stat-card-value">{stats.tasks_due_today}</div>
+          <div className="stat-card-label">Pending Tasks</div>
+          <div className="stat-card-sublabel">Due today · {stats.conversion_rate}% lead conversion</div>
         </div>
       </div>
 
@@ -182,6 +182,10 @@ export function DashboardPage() {
           <button className="quick-action-btn" onClick={() => navigate('/leads')}>
             <Target size={18} className="quick-action-btn-icon" />
             <span>Add Lead</span>
+          </button>
+          <button className="quick-action-btn" onClick={() => navigate('/expenses')}>
+            <ArrowUpFromLine size={18} className="quick-action-btn-icon" />
+            <span>Record Expense</span>
           </button>
         </div>
       </div>

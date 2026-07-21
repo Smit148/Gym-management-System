@@ -175,7 +175,10 @@ export function MembersPage() {
       sortable: true,
       render: (member) => (
         <div className="flex items-center gap-1">
-          <span className={`badge ${statusBadgeClass[member.status]}`}>
+          <span 
+            className={`badge ${statusBadgeClass[member.status]}`}
+            title={member.status === 'frozen' ? 'Membership is paused. Remaining days are preserved and expiry date is extended. Member cannot check in while frozen.' : undefined}
+          >
             {member.status === 'frozen' && <Snowflake size={10} style={{ marginRight: '0.125rem' }} />}
             {statusLabels[member.status]}
           </span>
@@ -227,9 +230,13 @@ export function MembersPage() {
   const searchFilter = (member: Member, query: string) => {
     const code = member.member_code.toLowerCase()
     const name = `${member.first_name} ${member.last_name || ''}`.toLowerCase()
-    const phone = member.phone
+    const cleanPhone = member.phone.replace(/\D/g, '')
+    const cleanQuery = query.replace(/\D/g, '')
     const email = (member.email || '').toLowerCase()
-    return name.includes(query) || code.includes(query) || phone.includes(query) || email.includes(query)
+    return name.includes(query) || 
+      code.includes(query) || 
+      (cleanQuery ? cleanPhone.includes(cleanQuery) : member.phone.includes(query)) || 
+      email.includes(query)
   }
 
   const isLoading = membersLoading || membershipsLoading

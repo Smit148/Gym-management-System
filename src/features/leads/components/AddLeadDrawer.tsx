@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { toast } from '@/components/Toast'
+import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import type { Lead, LeadSource } from '@/types'
 import { leadDetailsSchema } from '../schemas/lead.schema'
 
@@ -58,18 +60,18 @@ export function AddLeadDrawer({ onClose, onSubmit }: AddLeadDrawerProps) {
     const newLead: Lead = {
       id: `lead_${Date.now()}`,
       tenant_id: 'tenant_001',
-      first_name: formData.first_name.trim(),
-      last_name: formData.last_name.trim(),
-      phone: formData.phone.startsWith('+91') ? formData.phone : `+91${formData.phone.replace(/\D/g, '')}`,
+      first_name: sanitizeInput(formData.first_name),
+      last_name: sanitizeInput(formData.last_name),
+      phone: sanitizePhone(formData.phone.startsWith('+91') ? formData.phone : `+91${formData.phone.replace(/\D/g, '')}`),
       email: formData.email || null,
       gender: formData.gender || null,
       age_range: formData.age_range || null,
       source: formData.source,
       referral_member_id: null,
-      interest: formData.interest || null,
+      interest: sanitizeInput(formData.interest || ''),
       status: 'new',
       lost_reason: null,
-      notes: formData.notes || null,
+      notes: formData.notes ? sanitizeInput(formData.notes) : null,
       next_followup_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       assigned_to: 'usr_001',
       converted_member_id: null,
@@ -81,6 +83,7 @@ export function AddLeadDrawer({ onClose, onSubmit }: AddLeadDrawerProps) {
     }
 
     onSubmit(newLead)
+    toast.success(`Lead "${formData.first_name}" added successfully!`)
     setIsSubmitting(false)
   }
 
@@ -98,7 +101,7 @@ export function AddLeadDrawer({ onClose, onSubmit }: AddLeadDrawerProps) {
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer">
+      <div className="drawer" style={{ width: 'min(480px, 100vw)' }}>
         <div className="drawer-header">
           <h2 className="drawer-title">Add New Lead</h2>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
@@ -142,6 +145,7 @@ export function AddLeadDrawer({ onClose, onSubmit }: AddLeadDrawerProps) {
                   value={formData.phone}
                   onChange={(e) => updateField('phone', e.target.value)}
                   type="tel"
+                  maxLength={13}
                 />
                 {errors.phone && <span className="form-error">{errors.phone}</span>}
               </div>

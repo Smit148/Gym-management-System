@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const leadDetailsSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().optional(),
-  phone: z.string().min(10, 'Phone must be at least 10 digits'),
+  phone: z.string().min(10, 'Phone must be at least 10 digits').max(13, 'Phone number too long'),
   email: z.string().email('Invalid email address').or(z.literal('')),
   gender: z.enum(['male', 'female', 'other', '']).optional(),
   age_range: z.string().optional(),

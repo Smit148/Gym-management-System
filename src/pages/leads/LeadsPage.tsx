@@ -133,7 +133,18 @@ export function LeadsPage() {
 
   const searchFilter = (lead: Lead, query: string) => {
     const name = `${lead.first_name} ${lead.last_name || ''}`.toLowerCase()
-    return name.includes(query) || lead.phone.includes(query) || (lead.email || '').toLowerCase().includes(query)
+    const cleanPhone = lead.phone.replace(/\D/g, '')
+    const cleanQuery = query.replace(/\D/g, '')
+    const source = (sourceLabels[lead.source] || '').toLowerCase()
+    const interest = (lead.interest || '').toLowerCase()
+    const status = (statusLabels[lead.status] || '').toLowerCase()
+    
+    return name.includes(query) || 
+      (cleanQuery ? cleanPhone.includes(cleanQuery) : lead.phone.includes(query)) || 
+      (lead.email || '').toLowerCase().includes(query) ||
+      source.includes(query) ||
+      interest.includes(query) ||
+      status.includes(query)
   }
 
   // Define Columns for generic DataTable

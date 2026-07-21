@@ -269,7 +269,7 @@ body {
   z-index: var(--z-fixed);
   display: flex;
   flex-direction: column;
-  transition: transform var(--transition-slow);
+  transition: width var(--transition-slow), transform var(--transition-slow);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -439,6 +439,50 @@ body {
 .sidebar-footer {
   padding: 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Collapse toggle — hidden on mobile, shown on desktop */
+.sidebar-collapse-toggle {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-collapse-toggle {
+    display: flex;
+  }
+}
+
+/* Desktop collapsed sidebar */
+@media (min-width: 1024px) {
+  .app-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+  }
+
+  .app-sidebar.collapsed .sidebar-logo {
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .app-sidebar.collapsed .sidebar-link {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .app-sidebar.collapsed .sidebar-link span {
+    display: none;
+  }
+
+  .app-sidebar.collapsed .sidebar-link-badge {
+    display: none;
+  }
+
+  .app-sidebar.collapsed .sidebar-section-label {
+    display: none;
+  }
+
+  .app-shell.sidebar-collapsed .app-main {
+    margin-left: var(--sidebar-collapsed-width);
+  }
 }
 
 
@@ -1621,8 +1665,42 @@ body {
   display: inline-flex;
 }
 
+/* Desktop collapse toggle (hidden on mobile) */
+.desktop-collapse-toggle {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .mobile-menu-toggle {
     display: none !important;
+  }
+  .desktop-collapse-toggle {
+    display: inline-flex;
+  }
+}
+
+/* ============================================
+   TOAST ANIMATIONS
+   ============================================ */
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
   }
 }
