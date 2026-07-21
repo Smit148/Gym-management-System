@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { X, Check, CreditCard, User, Phone, Tag, ChevronDown, ChevronUp, ExternalLink, AlertTriangle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Check, User, ChevronDown, ChevronUp, ExternalLink, AlertTriangle } from 'lucide-react'
 import { toast } from '@/components/Toast'
 import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { useMockDbStore } from '@/lib/mock-db'
@@ -18,8 +18,6 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
   const navigate = useNavigate()
   const plans = useMockDbStore((state) => state.plans).filter(p => p.is_active)
   const members = useMockDbStore((state) => state.members)
-  
-  const defaultPlan = plans[0]
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
