@@ -109,7 +109,7 @@ export function AddLeadDrawer({ onClose, onSubmit }: AddLeadDrawerProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <div className="drawer-body">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {/* Name row */}

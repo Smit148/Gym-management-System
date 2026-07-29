@@ -146,8 +146,9 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          style={{ flex: 1, overflow: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
         >
+          <div className="drawer-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Name fields */}
           <div className="grid-2">
             <div className="form-group">
@@ -289,11 +290,10 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
             />
           </div>
 
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
+          </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid var(--border-primary)', paddingTop: '1rem' }}>
+          <div className="drawer-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
