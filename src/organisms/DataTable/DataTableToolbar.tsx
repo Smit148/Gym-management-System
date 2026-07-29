@@ -68,6 +68,10 @@ export function DataTableToolbar({
             <button
               onClick={() => setSearchValue('')}
               style={{
+                position: 'absolute',
+                right: '0.5rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
                 background: 'none',
                 border: 'none',
                 color: 'var(--text-tertiary)',
