@@ -117,8 +117,8 @@
 
   /* Text */
   --text-primary: var(--gray-900);
-  --text-secondary: var(--gray-600);
-  --text-tertiary: var(--gray-400);
+  --text-secondary: var(--gray-700);
+  --text-tertiary: var(--gray-500);
   --text-inverse: #FFFFFF;
   --text-sidebar: var(--gray-300);
   --text-sidebar-active: #FFFFFF;
@@ -205,7 +205,7 @@
 html {
   font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -411,13 +411,14 @@ body {
   background: var(--bg-sidebar-active);
   color: var(--text-sidebar-active);
   font-weight: 600;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
 }
 
 .sidebar-link-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .sidebar-link.active .sidebar-link-icon {
@@ -523,7 +524,14 @@ body {
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
+  animation: fadeInUp 0.4s ease-out both;
 }
+
+.stat-card:nth-child(1) { animation-delay: 0ms; }
+.stat-card:nth-child(2) { animation-delay: 60ms; }
+.stat-card:nth-child(3) { animation-delay: 120ms; }
+.stat-card:nth-child(4) { animation-delay: 180ms; }
+.stat-card:nth-child(5) { animation-delay: 240ms; }
 
 .stat-card::before {
   content: '';
@@ -574,7 +582,7 @@ body {
 
 .stat-card-sublabel {
   font-size: 0.75rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   margin-top: 0.125rem;
 }
 
@@ -639,6 +647,7 @@ body {
 
 .btn-primary:active:not(:disabled) {
   background: var(--primary-800);
+  transform: scale(0.97);
 }
 
 /* Secondary */
@@ -751,7 +760,7 @@ body {
 
 .form-hint {
   font-size: 0.75rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .form-select {
@@ -1365,6 +1374,11 @@ body {
   transform: translateY(-1px);
 }
 
+.quick-action-btn:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+}
+
 .quick-action-btn-icon {
   width: 18px;
   height: 18px;
@@ -1461,6 +1475,16 @@ body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Page entrance */

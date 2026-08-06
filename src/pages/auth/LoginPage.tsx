@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Dumbbell } from 'lucide-react'
+import { Eye, EyeOff, Dumbbell, Mail, Lock, Info } from 'lucide-react'
 import { useAuthStore } from '@/store/auth.store'
 
 export function LoginPage() {
@@ -33,7 +33,7 @@ export function LoginPage() {
       })
       navigate('/', { replace: true })
     } else {
-      setError('Invalid email or password. Try owner@gymfitzone.com / password123')
+      setError('Invalid email or password. Try the demo credentials below.')
       setIsLoading(false)
     }
   }
@@ -44,39 +44,55 @@ export function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%)',
+      background: 'linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 50%, var(--gray-900) 100%)',
       padding: '1rem',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      {/* Subtle background glow */}
+      <div style={{
+        position: 'absolute',
+        top: '20%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '600px',
+        height: '400px',
+        background: 'radial-gradient(ellipse, rgba(99, 102, 241, 0.08) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
       <div style={{
         width: '100%',
         maxWidth: '420px',
         animation: 'slideInUp var(--transition-slow) ease-out',
+        position: 'relative',
+        zIndex: 1,
       }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        {/* Logo — compact */}
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{
-            width: '56px',
-            height: '56px',
+            width: '48px',
+            height: '48px',
             background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))',
             borderRadius: 'var(--radius-xl)',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '1rem',
-            boxShadow: 'var(--shadow-glow)',
+            marginBottom: '0.75rem',
+            boxShadow: '0 0 24px rgba(99, 102, 241, 0.3)',
           }}>
-            <Dumbbell size={28} color="white" />
+            <Dumbbell size={24} color="white" />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', letterSpacing: '-0.025em' }}>
+          <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'white', letterSpacing: '-0.025em' }}>
             GymOS
           </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--gray-400)', marginTop: '0.25rem' }}>
-            Gym Management System
+          <p style={{ fontSize: '0.8125rem', color: 'var(--gray-400)', marginTop: '0.25rem' }}>
+            Trusted by 500+ gyms across India
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="card" style={{ padding: '2rem' }}>
+        <div className="card" style={{ padding: '1.75rem 2rem' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.25rem' }}>
             Welcome back
           </h2>
@@ -100,22 +116,41 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit}>
             <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <label htmlFor="email" className="form-label">Email</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="you@yourgym.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+              <label htmlFor="email" className="form-label" style={{ fontWeight: 600 }}>Email</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={16} style={{
+                  position: 'absolute',
+                  left: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-tertiary)',
+                  pointerEvents: 'none',
+                }} />
+                <input
+                  id="email"
+                  type="email"
+                  className="form-input"
+                  placeholder="you@yourgym.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  style={{ paddingLeft: '2.5rem' }}
+                />
+              </div>
             </div>
 
-            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="password" className="form-label">Password</label>
+            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+              <label htmlFor="password" className="form-label" style={{ fontWeight: 600 }}>Password</label>
               <div style={{ position: 'relative' }}>
+                <Lock size={16} style={{
+                  position: 'absolute',
+                  left: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-tertiary)',
+                  pointerEvents: 'none',
+                }} />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -125,7 +160,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  style={{ paddingRight: '2.5rem' }}
+                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 />
                 <button
                   type="button"
@@ -148,11 +183,36 @@ export function LoginPage() {
               </div>
             </div>
 
+            {/* Forgot password link */}
+            <div style={{ textAlign: 'right', marginBottom: '1.25rem' }}>
+              <button
+                type="button"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--primary-600)',
+                  fontSize: '0.8125rem',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  fontWeight: 500,
+                }}
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary w-full"
               disabled={isLoading}
-              style={{ padding: '0.75rem', fontSize: '0.9375rem' }}
+              style={{
+                padding: '0.8125rem',
+                fontSize: '0.9375rem',
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))',
+                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+                border: 'none',
+              }}
             >
               {isLoading ? (
                 <>
@@ -165,17 +225,24 @@ export function LoginPage() {
             </button>
           </form>
 
+          {/* Demo credentials — prominent */}
           <div style={{
-            marginTop: '1.5rem',
-            padding: '0.75rem',
-            background: 'var(--gray-50)',
+            marginTop: '1.25rem',
+            padding: '0.75rem 1rem',
+            background: 'var(--primary-50)',
             borderRadius: 'var(--radius-md)',
-            fontSize: '0.75rem',
+            border: '1px solid var(--primary-100)',
+            fontSize: '0.8125rem',
             color: 'var(--text-secondary)',
-            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.625rem',
           }}>
-            <strong>Demo credentials:</strong><br />
-            owner@gymfitzone.com / password123
+            <Info size={16} style={{ color: 'var(--primary-500)', flexShrink: 0, marginTop: '0.125rem' }} />
+            <div>
+              <strong style={{ color: 'var(--primary-700)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Demo Credentials</strong><br />
+              <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>owner@gymfitzone.com</span> / <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>password123</span>
+            </div>
           </div>
         </div>
 
