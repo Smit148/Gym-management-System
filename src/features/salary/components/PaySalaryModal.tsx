@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, Loader2 } from 'lucide-react'
 import { useMarkSalaryPaid } from '../hooks/useSalary'
 import type { SalaryRecord, PaymentMethod } from '@/types'
@@ -45,21 +46,17 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-          zIndex: 999, animation: 'fadeIn 0.2s ease',
-        }}
-      />
-
-      {/* Modal */}
+      <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1050 }} onClick={onClose} />
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#paysalary-amount',
+        fallbackFocus: '.drawer-panel',
+        clickOutsideDeactivates: true
+      }}>
       <div 
         role="dialog"
         aria-modal="true"
         aria-labelledby="paysalary-title"
-        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
         style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
@@ -155,6 +152,7 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

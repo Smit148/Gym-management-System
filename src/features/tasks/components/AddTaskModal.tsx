@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, ClipboardList } from 'lucide-react'
 import { useCreateTask } from '../hooks/useTasks'
 import type { Task } from '@/types'
@@ -54,7 +55,13 @@ export function AddTaskModal({ onClose }: AddTaskModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="add-task-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#task-title',
+        fallbackFocus: '.modal',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="add-task-title">
         <div className="modal-header">
           <h3 id="add-task-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ClipboardList size={18} style={{ color: 'var(--primary-500)' }} />
@@ -137,6 +144,7 @@ export function AddTaskModal({ onClose }: AddTaskModalProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

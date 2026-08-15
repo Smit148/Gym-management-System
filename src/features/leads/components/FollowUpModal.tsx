@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, MessageCircle, Phone, Mail, User } from 'lucide-react'
 import { useLogFollowup } from '../hooks/useLeads'
 import { followupSchema } from '../schemas/lead.schema'
@@ -80,94 +81,101 @@ export function FollowUpModal({ lead, onClose }: FollowUpModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="followup-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
-        <div className="modal-header">
-          <h3 id="followup-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Phone size={18} style={{ color: 'var(--primary-500)' }} />
-            Log Follow-up
-          </h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
-            <X size={16} />
-          </button>
-        </div>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#followup-method',
+        fallbackFocus: '.modal',
+        clickOutsideDeactivates: true
+      }}>
+        <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="followup-title">
+          <div className="modal-header">
+            <h3 id="followup-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Phone size={18} style={{ color: 'var(--primary-500)' }} />
+              Log Follow-up
+            </h3>
+            <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
+              <X size={16} />
+            </button>
+          </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Contact Method */}
-            <div className="form-group">
-              <label htmlFor="followup-method" className="form-label form-label-required">Contact Method</label>
-              <select
-                id="followup-method"
-                className="form-input form-select"
-                value={formData.contact_method}
-                onChange={(e) => setFormData(prev => ({ ...prev, contact_method: e.target.value as FollowupMethod }))}
-                aria-required="true"
-              >
-                {methods.map(m => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Outcome */}
-            <div className="form-group">
-              <label htmlFor="followup-outcome" className="form-label form-label-required">Outcome</label>
-              <select
-                id="followup-outcome"
-                className="form-input form-select"
-                value={formData.outcome}
-                onChange={(e) => setFormData(prev => ({ ...prev, outcome: e.target.value as FollowupOutcome }))}
-                aria-required="true"
-              >
-                {outcomes.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Next Follow-up Date */}
-            {formData.outcome !== 'not_interested' && (
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Contact Method */}
               <div className="form-group">
-                <label htmlFor="followup-nextdate" className="form-label form-label-required">Next Follow-up Date</label>
-                <input
-                  id="followup-nextdate"
-                  className={`form-input ${errors.next_followup_at ? 'form-input-error' : ''}`}
-                  type="date"
-                  value={formData.next_followup_at}
-                  onChange={(e) => setFormData(prev => ({ ...prev, next_followup_at: e.target.value }))}
+                <label htmlFor="followup-method" className="form-label form-label-required">Contact Method</label>
+                <select
+                  id="followup-method"
+                  className="form-input form-select"
+                  value={formData.contact_method}
+                  onChange={(e) => setFormData(prev => ({ ...prev, contact_method: e.target.value as FollowupMethod }))}
                   aria-required="true"
-                  aria-invalid={!!errors.next_followup_at}
-                  aria-describedby={errors.next_followup_at ? 'followup-nextdate-error' : undefined}
-                />
-                {errors.next_followup_at && <span id="followup-nextdate-error" className="form-error">{errors.next_followup_at}</span>}
+                >
+                  {methods.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
               </div>
-            )}
 
-            {/* Notes */}
-            <div className="form-group">
-              <label htmlFor="followup-notes" className="form-label">Outcome Notes / Remarks</label>
-              <textarea
-                id="followup-notes"
-                className="form-input"
-                placeholder="Details of what was discussed..."
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                rows={3}
-                style={{ resize: 'vertical' }}
-              />
+              {/* Outcome */}
+              <div className="form-group">
+                <label htmlFor="followup-outcome" className="form-label form-label-required">Outcome</label>
+                <select
+                  id="followup-outcome"
+                  className="form-input form-select"
+                  value={formData.outcome}
+                  onChange={(e) => setFormData(prev => ({ ...prev, outcome: e.target.value as FollowupOutcome }))}
+                  aria-required="true"
+                >
+                  {outcomes.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Next Follow-up Date */}
+              {formData.outcome !== 'not_interested' && (
+                <div className="form-group">
+                  <label htmlFor="followup-nextdate" className="form-label form-label-required">Next Follow-up Date</label>
+                  <input
+                    id="followup-nextdate"
+                    className={`form-input ${errors.next_followup_at ? 'form-input-error' : ''}`}
+                    type="date"
+                    value={formData.next_followup_at}
+                    onChange={(e) => setFormData(prev => ({ ...prev, next_followup_at: e.target.value }))}
+                    aria-required="true"
+                    aria-invalid={!!errors.next_followup_at}
+                    aria-describedby={errors.next_followup_at ? 'followup-nextdate-error' : undefined}
+                  />
+                  {errors.next_followup_at && <span id="followup-nextdate-error" className="form-error">{errors.next_followup_at}</span>}
+                </div>
+              )}
+
+              {/* Notes */}
+              <div className="form-group">
+                <label htmlFor="followup-notes" className="form-label">Outcome Notes / Remarks</label>
+                <textarea
+                  id="followup-notes"
+                  className="form-input"
+                  placeholder="Details of what was discussed..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Log Follow-up'}
-            </button>
-          </div>
-        </form>
-      </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Log Follow-up'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </FocusTrap>
     </>
   )
 }

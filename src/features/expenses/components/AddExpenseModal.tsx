@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, ArrowUpFromLine } from 'lucide-react'
 import { useCreateExpense } from '../hooks/useExpenses'
 import { expenseSchema, expenseCategories } from '../schemas/expense.schema'
@@ -93,7 +94,13 @@ export function AddExpenseModal({ onClose }: AddExpenseModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '460px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="add-expense-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#expense-category',
+        fallbackFocus: '.modal',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '460px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="add-expense-title">
         <div className="modal-header">
           <h3 id="add-expense-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ArrowUpFromLine size={18} style={{ color: 'var(--danger-500)' }} />
@@ -238,6 +245,7 @@ export function AddExpenseModal({ onClose }: AddExpenseModalProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

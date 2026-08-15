@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, Loader2 } from 'lucide-react'
 import { toast } from '@/components/Toast'
 import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
@@ -112,12 +113,17 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
       />
 
       {/* Drawer */}
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#staff-first-name',
+        fallbackFocus: '.drawer-panel',
+        clickOutsideDeactivates: true
+      }}>
       <div
         className="drawer-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-staff-title"
-        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0,
           width: 'min(480px, 100vw)', background: 'white',
@@ -158,6 +164,7 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
             <div className="form-group">
               <label className="form-label form-label-required">First Name</label>
               <input
+                id="staff-first-name"
                 className="form-input"
                 placeholder="e.g. Vikram"
                 value={formData.first_name}
@@ -308,6 +315,7 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

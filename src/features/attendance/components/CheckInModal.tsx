@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, ClipboardCheck } from 'lucide-react'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { useAttendanceLogs, useCheckIn } from '../hooks/useAttendance'
@@ -79,7 +80,13 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="checkin-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#checkin-member',
+        fallbackFocus: '.modal',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="checkin-title">
         <div className="modal-header">
           <h3 id="checkin-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ClipboardCheck size={18} style={{ color: 'var(--success-500)' }} />
@@ -169,6 +176,7 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

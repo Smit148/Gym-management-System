@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, Check, User, ChevronDown, ChevronUp, ExternalLink, AlertTriangle } from 'lucide-react'
+import { FocusTrap } from 'focus-trap-react'
+import { X, Check, User, ExternalLink, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
 import { toast } from '@/components/Toast'
 import { sanitizeInput, sanitizePhone } from '@/lib/sanitize'
 import { useMockDbStore } from '@/lib/mock-db'
@@ -201,7 +202,13 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer" style={{ maxWidth: '450px' }} role="dialog" aria-modal="true" aria-labelledby="add-member-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: isSuccess ? '#member-success-btn' : '#member-full-name',
+        fallbackFocus: '.drawer',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="drawer" style={{ maxWidth: '450px' }} role="dialog" aria-modal="true" aria-labelledby="add-member-title">
         <div className="drawer-header">
           <h2 id="add-member-title" className="drawer-title">Add New Member</h2>
           <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} type="button" aria-label="Close">
@@ -219,7 +226,7 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
               The member profile, active plan, and payment receipt have been generated.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
-              <button className="btn btn-primary" onClick={handleReset} style={{ width: '100%', justifyContent: 'center' }}>
+              <button id="member-success-btn" className="btn btn-primary" onClick={handleReset} style={{ width: '100%', justifyContent: 'center' }}>
                 <User size={18} />
                 Record Another Member
               </button>
@@ -244,6 +251,7 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
             <div className="form-group">
               <label className="form-label form-label-required">Full Name</label>
               <input
+                id="member-full-name"
                 className="form-input"
                 placeholder="e.g. Karan Malhotra"
                 value={formData.fullName}
@@ -519,6 +527,7 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
           </div>
         )}
       </div>
+      </FocusTrap>
     </>
   )
 }

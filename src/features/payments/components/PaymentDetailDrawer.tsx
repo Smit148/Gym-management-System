@@ -1,4 +1,5 @@
-import { X, Printer, Share2, User, CheckCircle2, FileText } from 'lucide-react'
+import { FocusTrap } from 'focus-trap-react'
+import { X, Printer, Share2, FileText, CheckCircle2, User } from 'lucide-react'
 import { formatCurrency, formatDate, escapeHtml } from '@/lib/utils'
 import { useMemberships } from '@/features/members/hooks/useMembers'
 import type { Payment } from '@/types'
@@ -120,7 +121,13 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer" style={{ maxWidth: '480px' }} role="dialog" aria-modal="true" aria-labelledby="payment-detail-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#payment-detail-close',
+        fallbackFocus: '.drawer',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="drawer" style={{ maxWidth: '480px' }} role="dialog" aria-modal="true" aria-labelledby="payment-detail-title">
         {/* Header */}
         <div className="drawer-header">
           <div>
@@ -138,7 +145,7 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
               </span>
             </div>
           </div>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
+          <button id="payment-detail-close" className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
         </div>
@@ -266,6 +273,7 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
           </button>
         </div>
       </div>
+      </FocusTrap>
     </>
   )
 }

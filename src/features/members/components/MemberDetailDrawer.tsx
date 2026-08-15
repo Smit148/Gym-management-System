@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import {
   X,
   Phone,
@@ -336,11 +337,17 @@ export function MemberDetailDrawer({
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer">
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#member-detail-close',
+        fallbackFocus: '.drawer',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="drawer" role="dialog" aria-modal="true" aria-labelledby="member-detail-title">
         {/* Header */}
         <div className="drawer-header">
           <div>
-            <h2 className="drawer-title">{member.first_name} {member.last_name}</h2>
+            <h2 id="member-detail-title" className="drawer-title">{member.first_name} {member.last_name}</h2>
             <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: '0.25rem' }}>
               <span className={`badge ${statusBadgeClass[member.status]}`}>
                 {member.status === 'frozen' && <Snowflake size={10} style={{ marginRight: '0.125rem' }} />}
@@ -374,7 +381,7 @@ export function MemberDetailDrawer({
               </div>
             )}
           </div>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <button id="member-detail-close" className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
         </div>
@@ -845,18 +852,25 @@ export function MemberDetailDrawer({
           )}
         </div>
       </div>
+      </FocusTrap>
 
       {/* 1. FREEZE MEMBERSHIP MODAL */}
       {showFreezeModal && membership && (
         <>
           <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={() => setShowFreezeModal(false)} />
-          <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }}>
+          <FocusTrap focusTrapOptions={{
+            onDeactivate: () => setShowFreezeModal(false),
+            initialFocus: '#freeze-duration',
+            fallbackFocus: '.modal',
+            clickOutsideDeactivates: true
+          }}>
+          <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="freeze-title">
             <div className="modal-header">
-              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 id="freeze-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Snowflake size={18} style={{ color: 'var(--info-500)' }} />
                 Freeze Membership
               </h3>
-              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowFreezeModal(false)}>
+              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowFreezeModal(false)} aria-label="Close">
                 <X size={16} />
               </button>
             </div>
@@ -891,8 +905,9 @@ export function MemberDetailDrawer({
 
               {/* Reason */}
               <div className="form-group">
-                <label className="form-label">Reason for Freeze</label>
+                <label htmlFor="freeze-duration" className="form-label form-label-required">Select Duration</label>
                 <select
+                  id="freeze-duration"
                   className="form-input form-select"
                   value={freezeData.reason}
                   onChange={(e) => setFreezeData(prev => ({ ...prev, reason: e.target.value as FreezeReason }))}
@@ -925,6 +940,7 @@ export function MemberDetailDrawer({
               </button>
             </div>
           </div>
+          </FocusTrap>
         </>
       )}
 
@@ -932,13 +948,19 @@ export function MemberDetailDrawer({
       {showUnfreezeModal && membership && (
         <>
           <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={() => setShowUnfreezeModal(false)} />
-          <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }}>
+          <FocusTrap focusTrapOptions={{
+            onDeactivate: () => setShowUnfreezeModal(false),
+            initialFocus: '#unfreeze-cancel-btn',
+            fallbackFocus: '.modal',
+            clickOutsideDeactivates: true
+          }}>
+          <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="unfreeze-title">
             <div className="modal-header">
-              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 id="unfreeze-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Play size={18} style={{ color: 'var(--success-500)' }} />
                 Unfreeze Membership
               </h3>
-              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowUnfreezeModal(false)}>
+              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowUnfreezeModal(false)} aria-label="Close">
                 <X size={16} />
               </button>
             </div>
@@ -958,10 +980,11 @@ export function MemberDetailDrawer({
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowUnfreezeModal(false)}>Cancel</button>
+              <button id="unfreeze-cancel-btn" className="btn btn-secondary" onClick={() => setShowUnfreezeModal(false)}>Cancel</button>
               <button className="btn btn-success" onClick={handleApplyUnfreeze}>Confirm Unfreeze</button>
             </div>
           </div>
+          </FocusTrap>
         </>
       )}
 
@@ -969,21 +992,28 @@ export function MemberDetailDrawer({
       {showRenewModal && (
         <>
           <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={() => setShowRenewModal(false)} />
-          <div className="modal" style={{ zIndex: 1060, maxWidth: '450px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+          <FocusTrap focusTrapOptions={{
+            onDeactivate: () => setShowRenewModal(false),
+            initialFocus: '#renew-plan',
+            fallbackFocus: '.modal',
+            clickOutsideDeactivates: true
+          }}>
+          <div className="modal" style={{ zIndex: 1060, maxWidth: '450px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }} role="dialog" aria-modal="true" aria-labelledby="renew-title">
             <div className="modal-header">
-              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 id="renew-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <RotateCcw size={18} style={{ color: 'var(--primary-500)' }} />
                 Renew / Change Plan
               </h3>
-              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowRenewModal(false)}>
+              <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowRenewModal(false)} aria-label="Close">
                 <X size={16} />
               </button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', flex: 1 }}>
               {/* Select Plan */}
               <div className="form-group">
-                <label className="form-label form-label-required">Choose Membership Plan</label>
+                <label htmlFor="renew-plan" className="form-label form-label-required">Choose Membership Plan</label>
                 <select
+                  id="renew-plan"
                   className="form-input form-select"
                   value={renewData.selectedPlanId}
                   onChange={(e) => handleRenewPlanChange(e.target.value)}
@@ -1081,6 +1111,7 @@ export function MemberDetailDrawer({
               </button>
             </div>
           </div>
+          </FocusTrap>
         </>
       )}
     </>

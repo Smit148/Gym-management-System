@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, Loader2, Send } from 'lucide-react'
 import { useSendReminder, useWhatsAppTemplates } from '../hooks/useWhatsApp'
 import type { WhatsAppReminder, ReminderType } from '@/types'
@@ -82,17 +83,19 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        onClick={onClose}
+      <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1050 }} onClick={onClose} />
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#reminder-template',
+        fallbackFocus: '.modal',
+        clickOutsideDeactivates: true
+      }}>
+      <div 
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="compose-reminder-title"
         style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
-          zIndex: 999, animation: 'fadeIn 0.2s ease',
-        }}
-      />
-
-      {/* Modal */}
-      <div style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         width: 'min(520px, 92vw)', maxHeight: '90vh', overflow: 'auto',
@@ -106,8 +109,8 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
           padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-primary)',
         }}>
           <div>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.125rem' }}>💬</span> Compose WhatsApp Reminder
+            <h2 id="compose-reminder-title" style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.125rem' }} aria-hidden="true">💬</span> Compose WhatsApp Reminder
             </h2>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.125rem' }}>
               Send a reminder message via WhatsApp
@@ -134,8 +137,9 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
 
           {/* Template Selector */}
           <div className="form-group">
-            <label className="form-label">Message Template</label>
+            <label htmlFor="reminder-template" className="form-label">Message Template</label>
             <select
+              id="reminder-template"
               className="form-input form-select"
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
@@ -218,6 +222,7 @@ export function ComposeReminderModal({ onClose }: ComposeReminderModalProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

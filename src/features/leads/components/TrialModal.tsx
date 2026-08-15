@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FocusTrap } from 'focus-trap-react'
 import { X, Calendar } from 'lucide-react'
 import { useScheduleTrial } from '../hooks/useLeads'
 import { trialSchema } from '../schemas/lead.schema'
@@ -66,7 +67,13 @@ export function TrialModal({ lead, onClose }: TrialModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="trial-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: onClose,
+        initialFocus: '#trial-start',
+        fallbackFocus: '.modal',
+        clickOutsideDeactivates: true
+      }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="trial-title">
         <div className="modal-header">
           <h3 id="trial-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Calendar size={18} style={{ color: 'var(--warning-500)' }} />
@@ -136,6 +143,7 @@ export function TrialModal({ lead, onClose }: TrialModalProps) {
           </div>
         </form>
       </div>
+      </FocusTrap>
     </>
   )
 }

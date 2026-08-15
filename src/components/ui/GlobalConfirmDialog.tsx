@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import { FocusTrap } from 'focus-trap-react'
 import { useConfirmStore } from '@/lib/confirm.store'
 
 export function GlobalConfirmDialog() {
@@ -21,6 +22,12 @@ export function GlobalConfirmDialog() {
 
   return (
     <div className="drawer-overlay" style={{ opacity: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 1000 }}>
+      <FocusTrap focusTrapOptions={{
+        onDeactivate: close,
+        initialFocus: '#global-confirm-cancel',
+        fallbackFocus: '.card',
+        clickOutsideDeactivates: true
+      }}>
       <div 
         className="card" 
         style={{ 
@@ -61,6 +68,7 @@ export function GlobalConfirmDialog() {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
           <button 
+            id="global-confirm-cancel"
             className="btn btn-secondary" 
             onClick={close}
             disabled={isLoading}
@@ -82,6 +90,7 @@ export function GlobalConfirmDialog() {
           </button>
         </div>
       </div>
+      </FocusTrap>
     </div>
   )
 }
