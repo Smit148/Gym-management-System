@@ -85,7 +85,7 @@ export function SettingsPage() {
 
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {validationError && (
-              <div style={{
+              <div role="alert" style={{
                 padding: '0.75rem',
                 background: 'var(--danger-50)',
                 color: 'var(--danger-700)',
@@ -99,20 +99,24 @@ export function SettingsPage() {
 
             {/* Gym Name */}
             <div className="form-group">
-              <label className="form-label form-label-required">Gym/Club Name</label>
+              <label htmlFor="settings-gym-name" className="form-label form-label-required">Gym/Club Name</label>
               <input
+                id="settings-gym-name"
                 className="form-input"
                 placeholder="e.g. Iron Temple Gym"
                 value={formData.gym_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, gym_name: e.target.value }))}
+                required
+                aria-required="true"
               />
             </div>
 
             {/* Phone & Email */}
             <div className="grid-2">
               <div className="form-group">
-                <label className="form-label">Phone Number</label>
+                <label htmlFor="settings-phone" className="form-label">Phone Number</label>
                 <input
+                  id="settings-phone"
                   className="form-input"
                   placeholder="e.g. +91 98765 43210"
                   value={formData.contact_phone}
@@ -120,8 +124,9 @@ export function SettingsPage() {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Email Address</label>
+                <label htmlFor="settings-email" className="form-label">Email Address</label>
                 <input
+                  id="settings-email"
                   className="form-input"
                   type="email"
                   placeholder="e.g. info@irontemple.com"
@@ -133,8 +138,9 @@ export function SettingsPage() {
 
             {/* Address */}
             <div className="form-group">
-              <label className="form-label">Physical Address</label>
+              <label htmlFor="settings-address" className="form-label">Physical Address</label>
               <textarea
+                id="settings-address"
                 className="form-input"
                 rows={3}
                 placeholder="Street address details..."
@@ -146,8 +152,9 @@ export function SettingsPage() {
 
             {/* Currency Dropdown */}
             <div className="form-group">
-              <label className="form-label">Default Currency Symbol</label>
+              <label htmlFor="settings-currency" className="form-label">Default Currency Symbol</label>
               <select
+                id="settings-currency"
                 className="form-input form-select"
                 value={formData.currency}
                 onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}

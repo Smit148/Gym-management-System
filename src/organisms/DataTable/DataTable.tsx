@@ -233,6 +233,7 @@ export function DataTable<T extends { id: string }>({
                     type="checkbox"
                     checked={isAllSelected}
                     onChange={toggleSelectAll}
+                    aria-label="Select all rows"
                     style={{ cursor: 'pointer' }}
                   />
                 </th>
@@ -243,6 +244,15 @@ export function DataTable<T extends { id: string }>({
                 <th
                   key={col.key}
                   onClick={() => col.sortable && handleSort(col.key)}
+                  onKeyDown={(e) => {
+                    if (col.sortable && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault()
+                      handleSort(col.key)
+                    }
+                  }}
+                  tabIndex={col.sortable ? 0 : undefined}
+                  role={col.sortable ? 'button' : undefined}
+                  aria-sort={col.sortable && sortConfig?.key === col.key ? (sortConfig.direction === 'asc' ? 'ascending' : 'descending') : undefined}
                   style={{ cursor: col.sortable ? 'pointer' : 'default', userSelect: 'none' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -315,9 +325,12 @@ export function DataTable<T extends { id: string }>({
                   {rowActions.length > 0 && (
                     <td onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
                       {rowActions.filter((act) => !act.visible || act.visible(row)).length > 0 && (
-                        <button
+                      <button
                           className="btn btn-ghost btn-icon btn-sm"
                           onClick={() => setActiveActionsMenu(activeActionsMenu === row.id ? null : row.id)}
+                          aria-label="Row actions"
+                          aria-expanded={activeActionsMenu === row.id}
+                          aria-haspopup="true"
                         >
                           <MoreVertical size={16} />
                         </button>
@@ -329,6 +342,7 @@ export function DataTable<T extends { id: string }>({
                           <div
                             style={{ position: 'fixed', inset: 0, zIndex: 99 }}
                             onClick={() => setActiveActionsMenu(null)}
+                            onKeyDown={(e) => { if (e.key === 'Escape') setActiveActionsMenu(null) }}
                           />
                           <div style={{
                             position: 'absolute',

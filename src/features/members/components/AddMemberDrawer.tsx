@@ -201,10 +201,10 @@ export function AddMemberDrawer({ onClose, onSubmit, existingMembersCount, prefi
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer" style={{ maxWidth: '450px' }}>
+      <div className="drawer" style={{ maxWidth: '450px' }} role="dialog" aria-modal="true" aria-labelledby="add-member-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         <div className="drawer-header">
-          <h2 className="drawer-title">Add New Member</h2>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} type="button">
+          <h2 id="add-member-title" className="drawer-title">Add New Member</h2>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} type="button" aria-label="Close">
             <X size={20} />
           </button>
         </div>

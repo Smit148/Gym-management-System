@@ -82,6 +82,7 @@ function ToastItem({ t, onRemove }: { t: Toast; onRemove: () => void }) {
       </span>
       <button
         onClick={onRemove}
+        aria-label="Dismiss notification"
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)', flexShrink: 0 }}
       >
         <X size={14} />
@@ -99,6 +100,8 @@ export function ToastContainer() {
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
         position: 'fixed',
         top: '1rem',

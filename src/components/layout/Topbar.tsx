@@ -14,7 +14,7 @@ export function Topbar() {
   const notifRef = useRef<HTMLDivElement>(null)
   const accountRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or Escape
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
@@ -24,10 +24,20 @@ export function Topbar() {
         setShowAccountMenu(false)
       }
     }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowNotifications(false)
+        setShowAccountMenu(false)
+      }
+    }
     if (showNotifications || showAccountMenu) {
       document.addEventListener('mousedown', handleClick)
+      document.addEventListener('keydown', handleKeyDown)
     }
-    return () => document.removeEventListener('mousedown', handleClick)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [showNotifications, showAccountMenu])
 
   return (
@@ -89,6 +99,7 @@ export function Topbar() {
               top: '100%',
               marginTop: '0.5rem',
               width: '280px',
+              maxWidth: 'calc(100vw - 2rem)',
               background: 'white',
               border: '1px solid var(--border-primary)',
               borderRadius: 'var(--radius-xl)',
@@ -137,6 +148,9 @@ export function Topbar() {
               onClick={() => { setShowAccountMenu(!showAccountMenu); setShowNotifications(false) }}
               style={{ cursor: 'pointer', border: showAccountMenu ? '2px solid var(--primary-500)' : '2px solid transparent', transition: 'border-color 0.15s ease' }}
               title={`${user.first_name} ${user.last_name}`}
+              aria-label={`Account menu for ${user.first_name} ${user.last_name}`}
+              aria-expanded={showAccountMenu}
+              aria-haspopup="true"
             >
               {getInitials(user.first_name, user.last_name)}
             </button>
@@ -149,6 +163,7 @@ export function Topbar() {
                 top: '100%',
                 marginTop: '0.5rem',
                 width: '240px',
+                maxWidth: 'calc(100vw - 2rem)',
                 background: 'white',
                 border: '1px solid var(--border-primary)',
                 borderRadius: 'var(--radius-xl)',

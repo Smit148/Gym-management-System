@@ -119,13 +119,13 @@ export function RecordPaymentModal({ onClose, prefilledMemberId }: RecordPayment
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '450px', width: '90%' }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '450px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="record-payment-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         <div className="modal-header">
-          <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 id="record-payment-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CreditCard size={18} style={{ color: 'var(--primary-500)' }} />
             Record Payment Collection
           </h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
         </div>
@@ -134,12 +134,16 @@ export function RecordPaymentModal({ onClose, prefilledMemberId }: RecordPayment
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Member Selector */}
             <div className="form-group">
-              <label className="form-label form-label-required">Select Member</label>
+              <label htmlFor="payment-member" className="form-label form-label-required">Select Member</label>
               <select
+                id="payment-member"
                 className={`form-input form-select ${errors.member_id ? 'form-input-error' : ''}`}
                 value={formData.member_id}
                 onChange={(e) => setFormData(prev => ({ ...prev, member_id: e.target.value }))}
                 disabled={!!prefilledMemberId}
+                aria-required="true"
+                aria-invalid={!!errors.member_id}
+                aria-describedby={errors.member_id ? 'payment-member-error' : undefined}
               >
                 <option value="">Select Member</option>
                 {members.map(m => (
@@ -148,7 +152,7 @@ export function RecordPaymentModal({ onClose, prefilledMemberId }: RecordPayment
                   </option>
                 ))}
               </select>
-              {errors.member_id && <span className="form-error">{errors.member_id}</span>}
+              {errors.member_id && <span id="payment-member-error" className="form-error">{errors.member_id}</span>}
             </div>
 
             {/* Dues Context Alert */}
@@ -182,24 +186,30 @@ export function RecordPaymentModal({ onClose, prefilledMemberId }: RecordPayment
 
             {/* Payment Amount */}
             <div className="form-group">
-              <label className="form-label form-label-required">Payment Amount (₹)</label>
+              <label htmlFor="payment-amount" className="form-label form-label-required">Payment Amount (₹)</label>
               <input
+                id="payment-amount"
                 className={`form-input ${errors.amount ? 'form-input-error' : ''}`}
                 type="number"
                 value={formData.amount || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, amount: Number(e.target.value) }))}
                 placeholder="e.g. 5000"
+                aria-required="true"
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? 'payment-amount-error' : undefined}
               />
-              {errors.amount && <span className="form-error">{errors.amount}</span>}
+              {errors.amount && <span id="payment-amount-error" className="form-error">{errors.amount}</span>}
             </div>
 
             {/* Payment Method */}
             <div className="form-group">
-              <label className="form-label form-label-required">Payment Method</label>
+              <label htmlFor="payment-method" className="form-label form-label-required">Payment Method</label>
               <select
+                id="payment-method"
                 className="form-input form-select"
                 value={formData.payment_method}
                 onChange={(e) => setFormData(prev => ({ ...prev, payment_method: e.target.value as PaymentMethod }))}
+                aria-required="true"
               >
                 <option value="upi">UPI (GPay, PhonePe, Paytm)</option>
                 <option value="cash">Cash</option>
@@ -210,8 +220,9 @@ export function RecordPaymentModal({ onClose, prefilledMemberId }: RecordPayment
 
             {/* Transaction Ref Number */}
             <div className="form-group">
-              <label className="form-label">Reference / Txn ID (Optional)</label>
+              <label htmlFor="payment-ref" className="form-label">Reference / Txn ID (Optional)</label>
               <input
+                id="payment-ref"
                 className="form-input"
                 placeholder="e.g. UPI881726510"
                 value={formData.reference_number}
@@ -221,8 +232,9 @@ export function RecordPaymentModal({ onClose, prefilledMemberId }: RecordPayment
 
             {/* Notes / Description */}
             <div className="form-group">
-              <label className="form-label">Notes</label>
+              <label htmlFor="payment-notes" className="form-label">Notes</label>
               <input
+                id="payment-notes"
                 className="form-input"
                 placeholder="e.g. Monthly instalment payment"
                 value={formData.description}

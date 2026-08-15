@@ -9,10 +9,11 @@ export function AppShell() {
 
   return (
     <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <Sidebar />
       <div className="app-main">
         <Topbar />
-        <main className="app-content page-enter">
+        <main id="main-content" className="app-content page-enter">
           <Outlet />
         </main>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Eye, EyeOff, Dumbbell, Mail, Lock, Info } from 'lucide-react'
 import { useAuthStore } from '@/store/auth.store'
 
@@ -40,12 +40,12 @@ export function LoginPage() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 50%, var(--gray-900) 100%)',
-      padding: '1rem',
+      padding: '1.25rem',
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -69,7 +69,7 @@ export function LoginPage() {
         zIndex: 1,
       }}>
         {/* Logo — compact */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
           <div style={{
             width: '48px',
             height: '48px',
@@ -78,7 +78,7 @@ export function LoginPage() {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '0.75rem',
+            marginBottom: '0.625rem',
             boxShadow: '0 0 24px rgba(99, 102, 241, 0.3)',
           }}>
             <Dumbbell size={24} color="white" />
@@ -87,35 +87,36 @@ export function LoginPage() {
             GymOS
           </h1>
           <p style={{ fontSize: '0.8125rem', color: 'var(--gray-400)', marginTop: '0.25rem' }}>
-            Trusted by 500+ gyms across India
+            Gym management for modern Indian gyms
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="card" style={{ padding: '1.75rem 2rem' }}>
+        <div className="card" style={{ padding: '1.5rem' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.25rem' }}>
             Welcome back
           </h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
             Sign in to your gym dashboard
           </p>
 
           {error && (
-            <div style={{
-              padding: '0.75rem 1rem',
+            <div role="alert" style={{
+              padding: '0.625rem 0.75rem',
               background: 'var(--danger-50)',
               border: '1px solid var(--danger-100)',
               borderRadius: 'var(--radius-md)',
               color: 'var(--danger-700)',
               fontSize: '0.8125rem',
               marginBottom: '1rem',
+              lineHeight: 1.5,
             }}>
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="form-group" style={{ marginBottom: '1rem' }}>
+            <div className="form-group" style={{ marginBottom: '0.875rem' }}>
               <label htmlFor="email" className="form-label" style={{ fontWeight: 600 }}>Email</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{
@@ -134,6 +135,7 @@ export function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  aria-required="true"
                   autoComplete="email"
                   style={{ paddingLeft: '2.5rem' }}
                 />
@@ -159,6 +161,7 @@ export function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  aria-required="true"
                   autoComplete="current-password"
                   style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 />
@@ -183,22 +186,20 @@ export function LoginPage() {
               </div>
             </div>
 
-            {/* Forgot password link */}
+            {/* Forgot password — UI placeholder only. Will be wired to real auth backend in Phase 1. */}
             <div style={{ textAlign: 'right', marginBottom: '1.25rem' }}>
-              <button
-                type="button"
+              <span
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--primary-600)',
+                  color: 'var(--gray-400)',
                   fontSize: '0.8125rem',
-                  cursor: 'pointer',
                   fontFamily: 'var(--font-sans)',
                   fontWeight: 500,
+                  cursor: 'default',
                 }}
+                title="Password reset will be available after backend authentication is implemented"
               >
                 Forgot password?
-              </button>
+              </span>
             </div>
 
             <button
@@ -206,7 +207,7 @@ export function LoginPage() {
               className="btn btn-primary w-full"
               disabled={isLoading}
               style={{
-                padding: '0.8125rem',
+                padding: '0.75rem',
                 fontSize: '0.9375rem',
                 fontWeight: 600,
                 background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))',
@@ -225,10 +226,10 @@ export function LoginPage() {
             </button>
           </form>
 
-          {/* Demo credentials — prominent */}
+          {/* Demo credentials */}
           <div style={{
             marginTop: '1.25rem',
-            padding: '0.75rem 1rem',
+            padding: '0.75rem',
             background: 'var(--primary-50)',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--primary-100)',
@@ -236,14 +237,32 @@ export function LoginPage() {
             color: 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '0.625rem',
+            gap: '0.5rem',
           }}>
             <Info size={16} style={{ color: 'var(--primary-500)', flexShrink: 0, marginTop: '0.125rem' }} />
-            <div>
-              <strong style={{ color: 'var(--primary-700)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Demo Credentials</strong><br />
-              <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>owner@gymfitzone.com</span> / <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>password123</span>
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ color: 'var(--primary-700)', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '0.25rem' }}>Demo Credentials</strong>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.8125rem', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                owner@gymfitzone.com
+              </div>
+              <div style={{ fontFamily: 'monospace', fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                password123
+              </div>
             </div>
           </div>
+
+          {/* Register link */}
+          <p style={{
+            textAlign: 'center',
+            fontSize: '0.875rem',
+            color: 'var(--text-secondary)',
+            marginTop: '1.25rem',
+          }}>
+            Don't have an account?{' '}
+            <Link to="/register" style={{ color: 'var(--primary-600)', fontWeight: 600, textDecoration: 'none' }}>
+              Register
+            </Link>
+          </p>
         </div>
 
         {/* Footer */}
@@ -251,7 +270,7 @@ export function LoginPage() {
           textAlign: 'center',
           fontSize: '0.75rem',
           color: 'var(--gray-500)',
-          marginTop: '1.5rem',
+          marginTop: '1.25rem',
         }}>
           © 2026 GymOS. Built for Indian gyms.
         </p>

@@ -93,13 +93,13 @@ export function AddExpenseModal({ onClose }: AddExpenseModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '460px', width: '90%' }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '460px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="add-expense-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         <div className="modal-header">
-          <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 id="add-expense-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ArrowUpFromLine size={18} style={{ color: 'var(--danger-500)' }} />
             Record Business Expense
           </h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
         </div>
@@ -109,11 +109,15 @@ export function AddExpenseModal({ onClose }: AddExpenseModalProps) {
             
             {/* Category */}
             <div className="form-group">
-              <label className="form-label form-label-required">Expense Category</label>
+              <label htmlFor="expense-category" className="form-label form-label-required">Expense Category</label>
               <select
+                id="expense-category"
                 className={`form-input form-select ${errors.category ? 'form-input-error' : ''}`}
                 value={formData.category}
                 onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value as ExpenseCategory }))}
+                aria-required="true"
+                aria-invalid={!!errors.category}
+                aria-describedby={errors.category ? 'expense-category-error' : undefined}
               >
                 {expenseCategories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -121,32 +125,40 @@ export function AddExpenseModal({ onClose }: AddExpenseModalProps) {
                   </option>
                 ))}
               </select>
-              {errors.category && <span className="form-error">{errors.category}</span>}
+              {errors.category && <span id="expense-category-error" className="form-error">{errors.category}</span>}
             </div>
 
             {/* Amount */}
             <div className="form-group">
-              <label className="form-label form-label-required">Expense Amount (₹)</label>
+              <label htmlFor="expense-amount" className="form-label form-label-required">Expense Amount (₹)</label>
               <input
+                id="expense-amount"
                 className={`form-input ${errors.amount ? 'form-input-error' : ''}`}
                 type="number"
                 value={formData.amount || ''}
                 onChange={(e) => setFormData((prev) => ({ ...prev, amount: Number(e.target.value) }))}
                 placeholder="e.g. 15000"
+                aria-required="true"
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? 'expense-amount-error' : undefined}
               />
-              {errors.amount && <span className="form-error">{errors.amount}</span>}
+              {errors.amount && <span id="expense-amount-error" className="form-error">{errors.amount}</span>}
             </div>
 
             {/* Date */}
             <div className="form-group">
-              <label className="form-label form-label-required">Expense Date</label>
+              <label htmlFor="expense-date" className="form-label form-label-required">Expense Date</label>
               <input
+                id="expense-date"
                 className={`form-input ${errors.expense_date ? 'form-input-error' : ''}`}
                 type="date"
                 value={formData.expense_date}
                 onChange={(e) => setFormData((prev) => ({ ...prev, expense_date: e.target.value }))}
+                aria-required="true"
+                aria-invalid={!!errors.expense_date}
+                aria-describedby={errors.expense_date ? 'expense-date-error' : undefined}
               />
-              {errors.expense_date && <span className="form-error">{errors.expense_date}</span>}
+              {errors.expense_date && <span id="expense-date-error" className="form-error">{errors.expense_date}</span>}
             </div>
 
             {/* Status (Planned vs Recorded) */}
@@ -203,8 +215,9 @@ export function AddExpenseModal({ onClose }: AddExpenseModalProps) {
 
             {/* Notes / Description */}
             <div className="form-group">
-              <label className="form-label">Notes / Description</label>
+              <label htmlFor="expense-notes" className="form-label">Notes / Description</label>
               <textarea
+                id="expense-notes"
                 className="form-input"
                 rows={2}
                 placeholder="e.g. Paid to trainer Vikram for personal training sessions"

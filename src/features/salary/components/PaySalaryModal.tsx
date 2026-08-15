@@ -55,7 +55,12 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
       />
 
       {/* Modal */}
-      <div style={{
+      <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="paysalary-title"
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+        style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         width: 'min(440px, 90vw)', background: 'white',
@@ -69,12 +74,12 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
           padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-primary)',
         }}>
           <div>
-            <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>Pay Salary</h2>
+            <h2 id="paysalary-title" style={{ fontSize: '1rem', fontWeight: 700 }}>Pay Salary</h2>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.125rem' }}>
               {record.staff_name} — {record.month}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
             <X size={18} />
           </button>
         </div>
@@ -100,7 +105,7 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
         {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {error && (
-            <div style={{
+            <div role="alert" style={{
               padding: '0.625rem 0.75rem', background: 'var(--danger-50)',
               color: 'var(--danger-700)', border: '1px solid var(--danger-100)',
               borderRadius: 'var(--radius-md)', fontSize: '0.75rem',
@@ -111,22 +116,26 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
 
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label form-label-required">Amount (₹)</label>
+              <label htmlFor="paysalary-amount" className="form-label form-label-required">Amount (₹)</label>
               <input
+                id="paysalary-amount"
                 className="form-input"
                 type="number"
                 min={1}
                 max={remaining}
                 value={paidAmount}
                 onChange={(e) => setPaidAmount(Number(e.target.value))}
+                aria-required="true"
               />
             </div>
             <div className="form-group">
-              <label className="form-label form-label-required">Payment Method</label>
+              <label htmlFor="paysalary-method" className="form-label form-label-required">Payment Method</label>
               <select
+                id="paysalary-method"
                 className="form-input form-select"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                aria-required="true"
               >
                 {paymentMethods.map(m => (
                   <option key={m.value} value={m.value}>{m.label}</option>
@@ -138,7 +147,7 @@ export function PaySalaryModal({ record, onClose }: PaySalaryModalProps) {
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={markPaidMutation.isPending}
-              style={{ background: 'var(--success-600)', borderColor: 'var(--success-600)' }}
+              style={{ background: 'var(--success-700)', borderColor: 'var(--success-700)' }}
             >
               {markPaidMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : null}
               Pay {formatCurrency(paidAmount)}

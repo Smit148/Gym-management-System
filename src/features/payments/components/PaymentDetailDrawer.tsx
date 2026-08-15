@@ -120,11 +120,11 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer" style={{ maxWidth: '480px' }}>
+      <div className="drawer" style={{ maxWidth: '480px' }} role="dialog" aria-modal="true" aria-labelledby="payment-detail-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         {/* Header */}
         <div className="drawer-header">
           <div>
-            <h2 className="drawer-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h2 id="payment-detail-title" className="drawer-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <FileText size={18} style={{ color: 'var(--primary-500)' }} />
               Invoice Receipt
             </h2>
@@ -138,7 +138,7 @@ export function PaymentDetailDrawer({ payment, onClose }: PaymentDetailDrawerPro
               </span>
             </div>
           </div>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
         </div>

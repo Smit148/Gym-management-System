@@ -67,6 +67,9 @@ export function Sidebar() {
       <div
         className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
         onClick={() => setSidebarOpen(false)}
+        role="button"
+        tabIndex={-1}
+        aria-label="Close sidebar"
       />
 
       <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
@@ -77,7 +80,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" aria-label="Main navigation">
           {Object.entries(sections).map(([section, items]) => (
             <div key={section}>
               {sectionLabels[section] && !sidebarCollapsed && (
@@ -98,6 +101,7 @@ export function Sidebar() {
                     className={`sidebar-link ${isActive ? 'active' : ''}`}
                     onClick={handleNavClick}
                     title={sidebarCollapsed ? item.label : undefined}
+                    aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="sidebar-link-icon" />
                     {!sidebarCollapsed && <span>{item.label}</span>}

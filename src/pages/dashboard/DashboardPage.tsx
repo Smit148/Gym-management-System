@@ -10,6 +10,8 @@ import {
   UserPlus as UserPlusIcon,
   ArrowUpFromLine,
   Loader2,
+  ChevronRight,
+  RefreshCw,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -17,7 +19,7 @@ import { useDashboardData } from '@/features/dashboard/hooks/useDashboard'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { data, isLoading } = useDashboardData()
+  const { data, isLoading, isError, refetch } = useDashboardData()
 
   if (isLoading || !data) {
     return (
@@ -32,6 +34,35 @@ export function DashboardPage() {
       }}>
         <Loader2 size={36} className="animate-spin" style={{ color: 'var(--primary-500)' }} />
         <p style={{ fontSize: '0.875rem', fontWeight: 500 }}>Recalculating dashboard metrics...</p>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '70vh',
+        gap: '1rem',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          width: '56px', height: '56px', background: 'var(--danger-50)', borderRadius: 'var(--radius-full)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.5rem'
+        }}>
+          <AlertTriangle size={28} style={{ color: 'var(--danger-600)' }} />
+        </div>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>Failed to load dashboard data</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '400px' }}>
+          We encountered an issue retrieving your gym's data. Please check your connection or try again.
+        </p>
+        <button className="btn btn-primary" onClick={() => refetch()}>
+          <RefreshCw size={16} />
+          Retry Connection
+        </button>
       </div>
     )
   }
@@ -56,10 +87,12 @@ export function DashboardPage() {
         <div
           className="stat-card"
           onClick={() => navigate('/attendance')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/attendance'); } }}
           role="button"
           tabIndex={0}
           aria-label="View attendance"
         >
+          <ChevronRight size={18} className="stat-chevron" />
           <div
             className="stat-card-icon"
             style={{ background: 'var(--success-50)', color: 'var(--success-600)' }}
@@ -75,10 +108,12 @@ export function DashboardPage() {
         <div
           className="stat-card"
           onClick={() => navigate('/payments')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/payments'); } }}
           role="button"
           tabIndex={0}
           aria-label="View payments"
         >
+          <ChevronRight size={18} className="stat-chevron" />
           <div
             className="stat-card-icon"
             style={{ background: 'var(--primary-50)', color: 'var(--primary-600)' }}
@@ -96,10 +131,12 @@ export function DashboardPage() {
         <div
           className="stat-card"
           onClick={() => navigate('/members?filter=expiring')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/members?filter=expiring'); } }}
           role="button"
           tabIndex={0}
           aria-label="View expiring memberships"
         >
+          <ChevronRight size={18} className="stat-chevron" />
           <div
             className="stat-card-icon"
             style={{ background: 'var(--warning-50)', color: 'var(--warning-600)' }}
@@ -122,10 +159,12 @@ export function DashboardPage() {
         <div
           className="stat-card"
           onClick={() => navigate('/leads')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/leads'); } }}
           role="button"
           tabIndex={0}
           aria-label="View leads"
         >
+          <ChevronRight size={18} className="stat-chevron" />
           <div
             className="stat-card-icon"
             style={{ background: '#FDF4FF', color: '#9333EA' }}
@@ -145,10 +184,12 @@ export function DashboardPage() {
         <div
           className="stat-card"
           onClick={() => navigate('/tasks')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/tasks'); } }}
           role="button"
           tabIndex={0}
           aria-label="View tasks"
         >
+          <ChevronRight size={18} className="stat-chevron" />
           <div
             className="stat-card-icon"
             style={{ background: 'var(--info-50)', color: 'var(--info-600)' }}
@@ -161,8 +202,74 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Needs Attention Section */}
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+          Needs Attention
+        </h2>
+        <div style={{ display: 'grid', gap: '0.75rem' }}>
+          {stats.expiring_this_week > 0 && (
+            <div
+              className="alert-panel alert-panel-warning"
+              onClick={() => navigate('/members?filter=expiring')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/members?filter=expiring'); } }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${stats.expiring_this_week} memberships expiring this week. Click to view.`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <AlertTriangle size={20} />
+                <span><strong>{stats.expiring_this_week} memberships</strong> expiring this week</span>
+              </div>
+              <ChevronRight size={18} style={{ opacity: 0.6 }} />
+            </div>
+          )}
+          {stats.followups_due_today > 0 && (
+            <div
+              className="alert-panel alert-panel-info"
+              onClick={() => navigate('/leads')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/leads'); } }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${stats.followups_due_today} lead follow-ups due today. Click to view.`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Target size={20} />
+                <span><strong>{stats.followups_due_today} lead follow-ups</strong> due today</span>
+              </div>
+              <ChevronRight size={18} style={{ opacity: 0.6 }} />
+            </div>
+          )}
+          {stats.tasks_due_today > 0 && (
+            <div
+              className="alert-panel alert-panel-info"
+              onClick={() => navigate('/tasks')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/tasks'); } }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${stats.tasks_due_today} tasks due today. Click to view.`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <ListTodo size={20} />
+                <span><strong>{stats.tasks_due_today} tasks</strong> due today</span>
+              </div>
+              <ChevronRight size={18} style={{ opacity: 0.6 }} />
+            </div>
+          )}
+
+          {stats.expiring_this_week === 0 && stats.followups_due_today === 0 && stats.tasks_due_today === 0 && (
+            <div className="alert-panel alert-panel-success" style={{ cursor: 'default' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <ClipboardCheck size={20} />
+                <span>You're all caught up! Nothing needs immediate attention right now.</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Quick Actions */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
           Quick Actions
         </h2>
@@ -295,7 +402,8 @@ export function DashboardPage() {
             </div>
           ) : (
             <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.8125rem' }}>
-              No referral data logged yet.
+              <p style={{ marginBottom: '0.5rem' }}>No referral data yet.</p>
+              <p>Add a referral source when creating new leads to track top referrers.</p>
             </div>
           )}
 
@@ -343,7 +451,8 @@ export function DashboardPage() {
             </div>
           ) : (
             <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.8125rem' }}>
-              No recent activity events.
+              <p style={{ marginBottom: '0.5rem' }}>No recent activity.</p>
+              <p>Key actions like adding members or receiving payments will appear here.</p>
             </div>
           )}
         </div>

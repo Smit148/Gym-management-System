@@ -79,13 +79,13 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '420px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="checkin-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         <div className="modal-header">
-          <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 id="checkin-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ClipboardCheck size={18} style={{ color: 'var(--success-500)' }} />
             Mark Attendance Check-In
           </h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
         </div>
@@ -94,7 +94,7 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             
             {error && (
-              <div style={{
+              <div role="alert" style={{
                 padding: '0.75rem',
                 background: 'var(--danger-50)',
                 border: '1px solid var(--danger-100)',
@@ -109,11 +109,14 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
 
             {/* Member Dropdown */}
             <div className="form-group">
-              <label className="form-label form-label-required">Select Member</label>
+              <label htmlFor="checkin-member" className="form-label form-label-required">Select Member</label>
               <select
+                id="checkin-member"
                 className="form-input form-select"
                 value={memberId}
                 onChange={(e) => setMemberId(e.target.value)}
+                aria-required="true"
+                aria-describedby="checkin-member-hint"
               >
                 <option value="">Select Member</option>
                 {activeMembers.map(m => (
@@ -122,18 +125,20 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
                   </option>
                 ))}
               </select>
-              <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
+              <span id="checkin-member-hint" style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', marginTop: '0.25rem', display: 'block' }}>
                 Only active members are eligible for check-in.
               </span>
             </div>
 
             {/* Check-in Method */}
             <div className="form-group">
-              <label className="form-label form-label-required">Check-In Method</label>
+              <label htmlFor="checkin-method" className="form-label form-label-required">Check-In Method</label>
               <select
+                id="checkin-method"
                 className="form-input form-select"
                 value={method}
                 onChange={(e) => setMethod(e.target.value as any)}
+                aria-required="true"
               >
                 <option value="receptionist">Receptionist Manual Mark</option>
                 <option value="manual">Member Self-Check-in</option>
@@ -143,8 +148,9 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
 
             {/* Notes */}
             <div className="form-group">
-              <label className="form-label">Notes (Optional)</label>
+              <label htmlFor="checkin-notes" className="form-label">Notes (Optional)</label>
               <input
+                id="checkin-notes"
                 className="form-input"
                 placeholder="e.g. Guest Pass, Forgot Card, Trial User"
                 value={notes}
@@ -157,7 +163,7 @@ export function CheckInModal({ onClose }: CheckInModalProps) {
             <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" style={{ background: 'var(--success-600)', borderColor: 'var(--success-600)' }} disabled={isSubmitting}>
+            <button type="submit" className="btn btn-primary" style={{ background: 'var(--success-700)', borderColor: 'var(--success-700)' }} disabled={isSubmitting}>
               {isSubmitting ? 'Checking in...' : 'Check In Member'}
             </button>
           </div>

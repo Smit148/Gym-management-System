@@ -114,6 +114,10 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
       {/* Drawer */}
       <div
         className="drawer-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-staff-title"
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
         style={{
           position: 'fixed', top: 0, right: 0, bottom: 0,
           width: 'min(480px, 100vw)', background: 'white',
@@ -128,14 +132,14 @@ export function AddStaffDrawer({ onClose, editStaff }: AddStaffDrawerProps) {
           padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-primary)',
         }}>
           <div>
-            <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            <h2 id="add-staff-title" style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               {isEdit ? 'Edit Staff Member' : 'Add Staff Member'}
             </h2>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.125rem' }}>
               {isEdit ? 'Update staff details below.' : 'Fill in the details to onboard a new staff member.'}
             </p>
           </div>
-          <button onClick={onClose} style={{
+          <button onClick={onClose} aria-label="Close" style={{
             background: 'none', border: 'none', cursor: 'pointer',
             color: 'var(--text-secondary)', padding: '0.25rem',
           }}>

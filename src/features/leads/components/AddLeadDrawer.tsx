@@ -101,10 +101,10 @@ export function AddLeadDrawer({ onClose, onSubmit }: AddLeadDrawerProps) {
   return (
     <>
       <div className="drawer-overlay" onClick={onClose} />
-      <div className="drawer" style={{ width: 'min(480px, 100vw)' }}>
+      <div className="drawer" style={{ width: 'min(480px, 100vw)' }} role="dialog" aria-modal="true" aria-labelledby="add-lead-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         <div className="drawer-header">
-          <h2 className="drawer-title">Add New Lead</h2>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <h2 id="add-lead-title" className="drawer-title">Add New Lead</h2>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
         </div>

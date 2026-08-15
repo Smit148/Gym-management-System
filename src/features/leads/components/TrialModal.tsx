@@ -66,13 +66,13 @@ export function TrialModal({ lead, onClose }: TrialModalProps) {
   return (
     <>
       <div className="modal-overlay" style={{ zIndex: 1050 }} onClick={onClose} />
-      <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }}>
+      <div className="modal" style={{ zIndex: 1060, maxWidth: '400px', width: '90%' }} role="dialog" aria-modal="true" aria-labelledby="trial-title" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
         <div className="modal-header">
-          <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 id="trial-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Calendar size={18} style={{ color: 'var(--warning-500)' }} />
             Schedule Trial Session
           </h3>
-          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose}>
+          <button className="btn btn-ghost btn-icon btn-sm" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
         </div>
@@ -81,23 +81,29 @@ export function TrialModal({ lead, onClose }: TrialModalProps) {
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Start Date */}
             <div className="form-group">
-              <label className="form-label form-label-required">Trial Start Date</label>
+              <label htmlFor="trial-start" className="form-label form-label-required">Trial Start Date</label>
               <input
+                id="trial-start"
                 className={`form-input ${errors.start_date ? 'form-input-error' : ''}`}
                 type="date"
                 value={formData.start_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                aria-required="true"
+                aria-invalid={!!errors.start_date}
+                aria-describedby={errors.start_date ? 'trial-start-error' : undefined}
               />
-              {errors.start_date && <span className="form-error">{errors.start_date}</span>}
+              {errors.start_date && <span id="trial-start-error" className="form-error">{errors.start_date}</span>}
             </div>
 
             {/* Duration */}
             <div className="form-group">
-              <label className="form-label form-label-required">Duration</label>
+              <label htmlFor="trial-duration" className="form-label form-label-required">Duration</label>
               <select
+                id="trial-duration"
                 className="form-input form-select"
                 value={formData.trial_days}
                 onChange={(e) => setFormData(prev => ({ ...prev, trial_days: Number(e.target.value) }))}
+                aria-required="true"
               >
                 <option value={3}>3 Days Free Trial</option>
                 <option value={5}>5 Days Free Trial</option>
@@ -107,8 +113,9 @@ export function TrialModal({ lead, onClose }: TrialModalProps) {
 
             {/* Notes / Goals */}
             <div className="form-group">
-              <label className="form-label">Trial Target Goals / Notes</label>
+              <label htmlFor="trial-notes" className="form-label">Trial Target Goals / Notes</label>
               <textarea
+                id="trial-notes"
                 className="form-input"
                 placeholder="e.g. Weight loss review, wants to try strength machines..."
                 value={formData.feedback}
